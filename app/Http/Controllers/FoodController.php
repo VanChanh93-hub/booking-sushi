@@ -22,9 +22,9 @@ class FoodController extends Controller
     public function getFoodsByCategory($categoryId)
     {
         $foods = Food::where('category_id', $categoryId)
-                    ->where('status', true)
-                    ->with('category')
-                    ->get();
+            ->where('status', true)
+            ->with('category')
+            ->get();
 
         if ($foods->isEmpty()) {
             return response()->json([

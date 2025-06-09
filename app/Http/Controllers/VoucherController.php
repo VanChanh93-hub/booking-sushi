@@ -43,7 +43,7 @@ class VoucherController extends Controller
             'discount_value' => 'required|numeric|min:0',
             'start_date' => 'required|date',
             'end_date' => 'required|date',
-            'status' => 'required',
+            'required_points' => 'nullable|integer|min:0',
         ]);
         $voucher = Voucher::create($vailidated);
         return response()->json([
@@ -84,7 +84,7 @@ class VoucherController extends Controller
             'discount_value' => 'required|numeric|min:0',
             'start_date' => 'required|date',
             'end_date' => 'required|date',
-            'status' => 'required',
+            'required_points' => 'nullable|integer',
         ]);
         $voucher->update($vailidated);
         return response()->json([
