@@ -16,6 +16,9 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\ComboController;
 use App\Http\Controllers\FoodgroupController;
+use App\Http\Controllers\VNPayController;
+use App\Http\Controllers\MoMoController;
+
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
@@ -92,6 +95,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [CustomerController::class, 'index']);
     Route::get('/logout', [CustomerController::class, 'destroy']);
 });
+Route::middleware(['auth'])->group(function () {
+    Route::put('/customers/{id}/role', [CustomerController::class, 'updateRole'])->name('customers.updateRole');
+});
 Route::get('admin/customers', [CustomerController::class, 'listAll']);
 Route::put('customers/{id}/status', [CustomerController::class, 'lockUnlock']);Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink']);
 Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
@@ -117,3 +123,8 @@ Route::post('/applyVoucher', [\App\Http\Controllers\VoucherController::class, 'a
 
 Route::post('/table/info/{token}', [OrderTableController::class, 'getTableInfo']); // kiểm tra bàn
 Route::post('/orderItem/add', [OrderItemController::class, 'addItem']);
+
+
+Route::post('/orders/vnpay-url', [VNPayController::class, 'createurlvnpay']);
+Route::get('/vnpay-return', [VNPayController::class, 'vnpayReturn'])->name('vnpay.callback');
+

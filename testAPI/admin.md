@@ -137,3 +137,11 @@ http://127.0.0.1:8000/api/customers/{id}/status PUT
 {
     "status": 0
 }
+=====================
+đổi role admin 
+note : chỉ có role admin mới đổi được các role khác
+http://127.0.0.1:8000/api/customers/{id}/role  PUT
+
+{
+  "role": "admin"
+}

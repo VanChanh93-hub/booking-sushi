@@ -10,6 +10,7 @@ use App\Models\OrderTable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Config;
 
 class OrderController extends Controller
 {
@@ -120,7 +121,6 @@ class OrderController extends Controller
     }
 
     if ($remainingGuests > 0) {
-        // Nếu không đủ bàn, dồn tất cả vào 1 bàn lớn nhất còn trống
         $largestTable = $availableTables->first();
         if ($largestTable) {
             // Tạo order trước
@@ -173,12 +173,23 @@ class OrderController extends Controller
                 }
             }
 
+            // Chuẩn bị dữ liệu thanh toán trả về FE
+            $paymentData = [
+                'order_id' => $order->id,
+                'amount' => $order->total_price,
+                'payment_method' => $order->payment_method,
+                'payment_code' => $order->payment_code,
+                'status' => $order->status,
+                // Có thể bổ sung các trường khác nếu cần
+            ];
+
             return response()->json([
                 'message' => 'Không đủ bàn, đã dồn tất cả khách vào 1 bàn lớn nhất còn trống!',
                 'order_id' => $order->id,
                 'order_table_ids' => $orderTableIds,
                 'selected_tables' => $selectedTables,
                 'ordered_foods' => $request->foods ?? [],
+                'payment' => $paymentData, // Thông tin thanh toán gửi FE
             ]);
         } else {
             return response()->json(['message' => 'Không còn bàn nào trống trong khung giờ này!'], 422);
@@ -191,15 +202,13 @@ class OrderController extends Controller
         'payment_method' => $request->payment_method,
         'voucher_id' => $request->voucher_id,
         'total_price' => $request->total_price,
-        'status' => 'confirmed',
+        'payment_status' => 'pending',
+        'status' => 'pending',
         'note' => $request->note,
     ]);
 
     // Tự động tạo payment_code nếu status là confirmed
-    if ($order->status === 'confirmed') {
-        $order->payment_code = strtoupper(uniqid('PAY'));
-        $order->save();
-    }
+
 
     // Gán bàn vào order_tables
     $orderTableIds = [];
@@ -243,19 +252,24 @@ class OrderController extends Controller
         }
     }
 
-    // Sau khi thanh toán thành công, tự tạo payment_code (ví dụ: random chuỗi)
-    // Ví dụ: nếu bạn muốn tạo mã khi status là confirmed
-    if ($order->status === 'confirmed' && empty($order->payment_code)) {
-        $order->payment_code = strtoupper(uniqid('PAY'));
-        $order->save();
-    }
 
+
+    // Chuẩn bị dữ liệu thanh toán trả về FE
+    $paymentData = [
+        'order_id' => $order->id,
+        'amount' => $order->total_price,
+        'payment_method' => $order->payment_method,
+        'status' => $order->status,
+        'payment_status' => $order->payment_status,
+        // Có thể bổ sung các trường khác nếu cần
+    ];
     return response()->json([
         'message' => 'Đặt bàn thành công',
         'order_id' => $order->id,
         'ids_tables' => $orderTableIds,
         'selected_tables' => $selectedTables,
         'ordered_foods' => $request->foods ?? [],
+        'payment' => $paymentData, // Thông tin thanh toán gửi FE
     ]);
    }
 
@@ -294,16 +308,14 @@ class OrderController extends Controller
         $validated = $request->validate([
             'status' => 'required|in:pending,confirmed,success,cancelled'
         ]);
-
         $order->status = $validated['status'];
-        $order->save();
-
-        // Nếu trạng thái là 'success', cộng điểm cho khách hàng
         if ($order->status == 'success') {
+            $order->save();
             $this->addPoint($order);
             return response()->json(['message' => 'Đã tích điểm', 'order' => $order]);
         }
-
+        $order->save();
         return response()->json(['message' => 'Trạng thái đơn hàng đã được cập nhật', 'order' => $order]);
     }
+
 }

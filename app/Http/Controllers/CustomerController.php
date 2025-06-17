@@ -76,34 +76,6 @@ class CustomerController extends Controller
     }
 
 
-    public function update(Request $request, string $id)
-    {
-        $customer = Customers::find($id);
-        if (!$customer) {
-            return response()->json(['message' => 'Người dùng không tồn tại'], 404);
-        }
-
-        $request->validate([
-            'name'     => 'nullable|string|max:255',
-            'email'    => 'nullable|string|email|max:255|unique:customers,email,' . $id,
-            'phone'    => 'nullable|digits_between:10,15',
-            'password' => 'nullable|string|min:6',
-        ]);
-
-        $customer->name  = $request->name ?? $customer->name;
-        $customer->email = $request->email ?? $customer->email;
-        $customer->phone = $request->phone ?? $customer->phone;
-
-        if ($request->filled('password')) {
-            $customer->password = bcrypt($request->password);
-        }
-
-        $customer->save();
-
-        return response()->json($customer);
-    }
-
-
     public function destroy(Request $request)
     {
         $request->user()->tokens()->delete();
@@ -139,5 +111,24 @@ class CustomerController extends Controller
             'message' => $customer->status == 'locked' || $customer->status == 0 ? 'Đã khoá tài khoản' : 'Đã mở khoá tài khoản',
             'customer' => $customer
         ]);
+    }
+
+    public function updateRole(Request $request, $id)
+    {
+        // Kiểm tra user hiện tại có phải admin không
+        $user = Auth::user();
+        if (!$user || $user->role !== 'admin') {
+            return response()->json(['message' => 'bạn không phải admin'], 403);
+        }
+
+        $request->validate([
+            'role' => 'required|in:user,admin,ordermanger,menumanger',
+        ]);
+
+        $customer = Customers::findOrFail($id);
+        $customer->role = $request->role;
+        $customer->save();
+
+        return response()->json(['message' => 'Role updated successfully', 'customer' => $customer]);
     }
 }

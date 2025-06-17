@@ -16,6 +16,7 @@ class Order extends Model
         'voucher_id',
         'total_price',
         'status',
+        'payment_status',
         'payment_code',
         'note',
     ];
