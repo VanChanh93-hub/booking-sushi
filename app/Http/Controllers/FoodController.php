@@ -91,7 +91,6 @@ class FoodController extends Controller
             'price' => 'sometimes|numeric|min:0',
             'status' => 'sometimes|boolean',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'season' => 'sometimes|in:spring,summer,autumn,winter',
         ]);
 
         if ($request->hasFile('image')) {

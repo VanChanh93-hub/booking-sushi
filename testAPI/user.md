@@ -102,3 +102,13 @@ http://127.0.0.1:8000/api/login
     "email": "test@example.com",
     "password": "password123"
 }
+
+=====================
+xem lịch sử dơn hàng 
+http://127.0.0.1:8000/api/orders/history/{id_customer} GET
+
+
+huỷ đơn hàng 
+http://127.0.0.1:8000/api/orders/cancel/{id_order} POST
+
+

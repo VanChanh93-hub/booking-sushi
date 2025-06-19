@@ -40,7 +40,8 @@ Route::delete('/order/delete/{id}', [OrderController::class, 'destroy']);    // 
 Route::patch('/orderitems/update-status/{id}', [OrderItemController::class, 'updateStatus']);
 Route::post('/orders/bookTables', [OrderController::class, 'bookTables']);
 Route::get('/statsDashbroad', [OrderController::class, 'statsDashbroad']);
-
+Route::get('/orders/history/{id}', [OrderController::class, 'orderHistory']);
+Route::post('/orders/cancel/{id}', [OrderController::class, 'cancelOrder']);
 
 
 

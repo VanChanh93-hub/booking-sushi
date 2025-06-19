@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Config;
-
 class OrderController extends Controller
 {
     //  Danh sách đơn
@@ -316,6 +315,43 @@ class OrderController extends Controller
         }
         $order->save();
         return response()->json(['message' => 'Trạng thái đơn hàng đã được cập nhật', 'order' => $order]);
+    }
+
+    public function orderHistory($id_customer)
+    {
+        $orders = Order::where('customer_id', $id_customer)
+            ->orderBy('created_at', 'desc')
+            ->with(['orderItems.food'])
+            ->get();
+
+        $result = $orders->map(function ($order) {
+            return [
+                'order_id' => $order->id,
+                'total_price' => $order->total_price,
+                'status' => $order->status,
+                'created_at' => $order->created_at,
+                'items' => $order->orderItems->map(function ($item) {
+                    return [
+                        'food_name' => optional($item->food)->name,
+                        'quantity' => $item->quantity,
+                        'price' => $item->price,
+                    ];
+                }),
+            ];
+        });
+
+        return response()->json($result);
+    }
+
+    public function cancelOrder($order_id)
+    {
+        $order = Order::find($order_id);
+        if (!$order) {
+            return response()->json(['message' => 'Order not found'], 404);
+        }
+        $order->status = 'cancelled';
+        $order->save();
+        return response()->json(['message' => 'Order cancelled successfully']);
     }
 
 }

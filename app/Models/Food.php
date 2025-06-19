@@ -17,7 +17,6 @@ class Food extends Model
         'price',
         'status',
         'image',
-        'season'
     ];
 
     public function category()

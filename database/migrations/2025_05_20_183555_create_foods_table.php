@@ -19,7 +19,6 @@ return new class extends Migration
             $table->string('jpName')->nullable();
             $table->string('image')->nullable();
             $table->text('description')->nullable();
-            $table->enum('season', ['spring', 'summer', 'autumn', 'winter'])->default('spring');
             $table->decimal('price', 10, 2);
             $table->boolean('status')->default(true);
             $table->timestamps();
