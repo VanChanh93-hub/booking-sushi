@@ -71,7 +71,7 @@ class VNPayController extends Controller
                 'payment_code' => $payment_code,
             ]);
 
-            return redirect('http://localhost:5173/payment-success');
+            return redirect('http://localhost:30003/payment-success');
         } else {
             // Payment failed - clean up the order
             if ($order) {
@@ -79,7 +79,7 @@ class VNPayController extends Controller
                 $order->tables()->detach();
                 $order->delete();
             }
-            return redirect('http://localhost:5173/payment-failed');
+            return redirect('http://localhost:30003/payment-failed');
         }
     }
 }
