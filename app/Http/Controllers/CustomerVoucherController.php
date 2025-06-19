@@ -47,34 +47,95 @@ class CustomerVoucherController extends Controller
             'voucher_id' => 'required|exists:vouchers,id',
             'customer_id' => 'required|exists:customers,id',
         ]);
-        $customer = Customer::where("id", $request->customer_id)->firstOrFail();
-        $voucher = Voucher::where("id", $request->voucher_id)->firstOrFail();
+
+        $customer = Customer::findOrFail($request->customer_id);
+        $voucher = Voucher::findOrFail($request->voucher_id);
+
+        $exists = CustomerVoucher::where('customer_id', $customer->id)
+            ->where('voucher_id', $voucher->id)
+            ->exists();
+
+        if ($exists) {
+            return response()->json(["message" => "Bạn đã đổi voucher này rồi"]);
+        }
 
         if ($customer->point < $voucher->required_points) {
-            return response()->json([
-                "message" => "bạn không đủ điểm để đổi",
-            ]);
+            return response()->json(["message" => "Bạn không đủ điểm để đổi"]);
         }
+
         if ($voucher->usage_limit < 1) {
-            return response()->json([
-                "message" => "Voucher này đã hết",
-            ]);
+            return response()->json(["message" => "Voucher này đã hết"]);
         }
-        $customer->point  -= $voucher->required_points;
+
+        $customer->point -= $voucher->required_points;
         $customer->save();
 
-        $voucher->usage_limit = $voucher->usage_limit - 1;;
+        $voucher->usage_limit -= 1;
         $voucher->save();
-        $customer_voucher  =  [
-            'customer_id' => $request->customer_id,
-            'voucher_id' => $request->voucher_id,
-            "assigned_at" => now(),
-            "date" => $voucher->end_date
-        ];
-        CustomerVoucher::create($customer_voucher);
+
+        // Tạo voucher cá nhân
+        CustomerVoucher::create([
+            'customer_id' => $customer->id,
+            'voucher_id' => $voucher->id,
+            'assigned_at' => now(),
+            'date' => $voucher->end_date,
+            'is_used' => 0
+        ]);
+
         return response()->json([
-            "message" => "đã đổi voucher thành công",
-            "thông tin voucher" => CustomerVoucher::where("customer_id", $request->customer_id)->get()
+            "message" => "Đã đổi voucher thành công",
+            "voucher_info" => CustomerVoucher::where("customer_id", $customer->id)->get()
+        ]);
+    }
+
+
+    public function applyVoucher(Request $request)
+    {
+        $customerId = $request->customer;
+        $total = $request->total;
+        $voucherCode = $request->code;
+
+        $voucher = Voucher::where('code', $voucherCode)
+            ->where('status', 'active')
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->first();
+
+        if (!$voucher) {
+            return response()->json(['message' => 'Voucher không tồn tại hoặc đã hết hạn'], 404);
+        }
+
+        if ($voucher->is_personal) {
+            $customerVoucher = CustomerVoucher::where("customer_id", $customerId)
+                ->where("voucher_id", $voucher->id)
+                ->first();
+
+            if (!$customerVoucher) {
+                return response()->json(['message' => 'Bạn chưa đổi voucher này', "chekc" => $customerId], 403);
+            }
+
+            if ($customerVoucher->is_used) {
+                return response()->json(['message' => 'Bạn đã sử dụng voucher này rồi'], 400);
+            }
+
+            $customerVoucher->is_used = 1;
+            $customerVoucher->save();
+        } else {
+            // Voucher dùng chung
+            if ($voucher->usage_limit <= 0) {
+                return response()->json(['message' => 'Voucher đã hết lượt sử dụng', "vheck" => $voucher->usage_limit], 400);
+            }
+
+            $voucher->usage_limit -= 1;
+            $voucher->save();
+        }
+
+        $discount = $voucher->discount_value;
+        $newTotal = max(0, $total - $discount);
+
+        return response()->json([
+            'message' => 'Voucher áp dụng thành công',
+            'new_total' => $newTotal,
         ]);
     }
 }

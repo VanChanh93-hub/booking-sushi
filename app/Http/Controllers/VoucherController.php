@@ -102,30 +102,4 @@ class VoucherController extends Controller
             'message' => 'Xóa thành công',
         ], 200);
     }
-    public function applyVoucher(Request  $request)
-    {
-        $total = $request->total;
-        $voucherCode = $request->code;
-        $voucher = Voucher::where('code', $voucherCode)
-            ->where('status', 'active')
-            ->where('start_date', '<=', now())
-            ->where('end_date', '>=', now())
-            ->first();
-        if (!$voucher) {
-            return response()->json(['message' => 'voucher không tồn tại'], 404);
-        }
-        if ($voucher->usage_limit <= 0) {
-            return response()->json(['message' => 'Voucher đã hết lượt sử dụng'], 400);
-        }
-
-        $voucher->usage_limit -= 1;
-        $voucher->save();
-        $discount = $voucher->discount_value;
-        $newTotal = max(0, $total - $discount);
-
-        return response()->json([
-            'message' => 'Voucher áp dụng thành công',
-            'new_total' => $newTotal,
-        ]);
-    }
 }

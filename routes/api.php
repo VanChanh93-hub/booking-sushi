@@ -90,9 +90,10 @@ Route::put('/voucher/{id}', [VoucherController::class, 'update']); // cập nh�
 Route::delete('/voucher/{id}', [VoucherController::class, 'destroy']); // xoá
 
 Route::post('/exchangePoints', [CustomerVoucherController::class, 'exchangePoints']);
-Route::post('/applyVoucher', [VoucherController::class, 'applyVoucher']);
+Route::post('/applyVoucher', [CustomerVoucherController::class, 'applyVoucher']);
 
 
 
 Route::post('/table/info/{token}', [OrderTableController::class, 'getTableInfo']); // kiểm tra bàn
 Route::post('/orderItem/add', [OrderItemController::class, 'addItem']);
+Route::get('/getItemsByOrderId/{id}', [OrderItemController::class, 'getItemsByOrderId']);

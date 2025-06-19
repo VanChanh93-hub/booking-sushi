@@ -21,20 +21,58 @@ class OrderTableController extends Controller
         $table = Table::where('qr_token', $token)->first();
 
         if (!$table) {
-            return response()->json(['message' => 'Mã bàn không toàn tại'], 403);
+            return response()->json(['message' => 'Mã bàn không tồn tại'], 403);
         }
 
+        // Tìm orderTable đang phục vụ
         $orderTable = orderTable::where('table_id', $table->id)
             ->where('status', 'serve')
+            ->with('order') // nếu cần chi tiết đơn hàng
             ->first();
-        if (!$orderTable) {
-            return response()->json(['message' => 'Bàn chưa có hoá đơn'], 404);
+
+        if ($orderTable) {
+            return response()->json([
+                'message' => 'Bàn đang được phục vụ',
+                'table_id' => $table->id,
+                'order_id' => $orderTable->order->id ?? null,
+                'status' => $orderTable->status,
+            ]);
         }
+
+        // Kiểm tra xem bàn này đã từng có đặt bàn chưa
+        $existingOrderTable = orderTable::where('table_id', $table->id)->first();
+
+        if (!$existingOrderTable) {
+            // Tạo đơn hàng mới
+            $order = Order::create([
+                'total' => 0,
+                'status' => 'pending', // hoặc trạng thái mặc định bạn dùng
+            ]);
+
+            // Gắn đơn hàng vào bàn
+            $orderTable = orderTable::create([
+                'table_id' => $table->id,
+                'order_id' => $order->id,
+                'status' => 'serve',
+            ]);
+
+            return response()->json([
+                'message' => 'Đã tạo đơn hàng mới và phục vụ bàn',
+                'table_id' => $table->id,
+                'order_id' => $order->id,
+                'status' => $orderTable->status,
+            ]);
+        }
+
+        // Nếu đã từng có đặt bàn nhưng không ở trạng thái 'serve'
         return response()->json([
-            'số bàn' => $table->id,
-            'hoá đơn' => $orderTable,
-        ]);
+            'message' => 'Bàn đã được đặt trước nhưng chưa phục vụ',
+            'table_id' => $table->id,
+            'order_id' => $existingOrderTable->order_id,
+            'status' => $existingOrderTable->status,
+        ], 403);
     }
+
     /**
      * Store a newly created resource in storage.
      */
