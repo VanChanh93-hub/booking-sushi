@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('table_number')->unique();
             $table->integer('max_guests');
-            $table->string('image')->nullable(); // e.g., indoor, outdoor, balcony
-            $table->string('status')->default('available'); // available, reserved, occupied
+            $table->string('image')->nullable();
+            $table->string('status')->default('available');
             $table->string('qr_token')->unique();
             $table->timestamps();
         });

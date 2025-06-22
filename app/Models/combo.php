@@ -14,4 +14,8 @@ class Combo extends Model
         'description',
         'status',
     ];
+    public function comboitems()
+    {
+        return $this->hasMany(ComboItem::class);
+    }
 }

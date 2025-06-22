@@ -23,6 +23,8 @@ class Customer extends Authenticatable
         'phone',
         'point',
         'membership_level',
+        'status',
+        'role',
     ];
 
     /**

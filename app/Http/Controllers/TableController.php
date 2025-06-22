@@ -167,7 +167,6 @@ class TableController extends Controller
     {
         $validated = $request->validate([
             'table_number' => 'required|string|max:255|unique:tables,table_number',
-            'size' => 'required|integer|min:1',
             'max_guests' => 'required|integer|min:1',
             'status' => 'required|in:available,reserved,occupied',
         ]);

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('food_id')->nullable()->constrained('foods')->nullOnDelete();
             $table->foreignId('combo_id')->nullable()->constrained('combos')->nullOnDelete();
             $table->integer('quantity');
-            $table->string('status')->default('pending'); // pending, preparing, ready, served, cancelled
+            $table->enum('status', ['pending', 'preparing', 'served', 'cancelled'])->default('pending');
             $table->decimal('price', 10, 2);
             $table->timestamps();
         });

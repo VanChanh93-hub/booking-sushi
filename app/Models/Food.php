@@ -7,19 +7,24 @@ use Illuminate\Database\Eloquent\Model;
 class Food extends Model
 {
 
-    protected $table = 'foods';
+    protected $table = 'foods';  // Đảm bảo đúng tên bảng
     protected $fillable = [
+        'category_id',
+        'group_id',
         'name',
         'jpName',
+        'description',
         'price',
-        'category_id',
         'status',
         'image',
-        'description'
     ];
 
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+    public function group()
+    {
+        return $this->belongsTo(FoodGroup::class, 'group_id');
     }
 }

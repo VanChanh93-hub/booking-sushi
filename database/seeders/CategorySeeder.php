@@ -19,12 +19,7 @@ class CategorySeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'name' => 'Đồ Uống',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'name' => 'Cơm & Mì',
+                'name' => 'Sashimi',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -34,15 +29,24 @@ class CategorySeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'name' => 'Sashimi',
+                'name' => 'Cơm & Mì',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+             [
+                'name' => 'Sushi',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'name' => 'Sushi 3 Loại',
+                'name' => 'Đồ Uống',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+
+
+
+
         ]);
         /**
          * Run the database seeds.

@@ -74,4 +74,22 @@ class OrderItemController extends Controller
             'order_item' => $orderItem,
         ], 201);
     }
+
+    // Cập nhật trạng thái của order item
+    public function updateStatus(Request $request, $id)
+    {
+        $orderItem = OrderItem::findOrFail($id);
+
+        $validated = $request->validate([
+            'status' => 'required|in:pending,serve,done,cancelled'
+        ]);
+
+        $orderItem->status = $validated['status'];
+        $orderItem->save();
+
+        return response()->json([
+            'message' => 'Cập nhật trạng thái thành công',
+            'order_item' => $orderItem,
+        ]);
+    }
 }

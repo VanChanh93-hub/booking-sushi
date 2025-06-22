@@ -31,4 +31,8 @@ class OrderItem extends Model
     {
         return $this->belongsTo(Combo::class, 'combo_item_id');
     }
+    public function combo()
+    {
+        return $this->belongsTo(\App\Models\Combo::class, 'combo_id');
+    }
 }

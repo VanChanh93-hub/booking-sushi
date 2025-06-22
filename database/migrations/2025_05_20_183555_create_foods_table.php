@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::create('foods', function (Blueprint $table) {
             $table->id();
             $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete();
+            $table->foreignId('group_id')->nullable()->constrained('food_groups')->cascadeOnDelete();
             $table->string('name');
             $table->string('jpName')->nullable();
             $table->string('image')->nullable();
             $table->text('description')->nullable();
-            $table->enum('season', ['spring', 'summer', 'autumn', 'winter'])->default('spring');
             $table->decimal('price', 10, 2);
             $table->boolean('status')->default(true);
             $table->timestamps();

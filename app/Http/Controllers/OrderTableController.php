@@ -8,9 +8,6 @@ use App\Models\Table;
 
 class OrderTableController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         //

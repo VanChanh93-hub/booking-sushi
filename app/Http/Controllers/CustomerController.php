@@ -76,38 +76,59 @@ class CustomerController extends Controller
     }
 
 
-    public function update(Request $request, string $id)
-    {
-        $customer = Customers::find($id);
-        if (!$customer) {
-            return response()->json(['message' => 'Người dùng không tồn tại'], 404);
-        }
-
-        $request->validate([
-            'name'     => 'nullable|string|max:255',
-            'email'    => 'nullable|string|email|max:255|unique:customers,email,' . $id,
-            'phone'    => 'nullable|digits_between:10,15',
-            'password' => 'nullable|string|min:6',
-        ]);
-
-        $customer->name  = $request->name ?? $customer->name;
-        $customer->email = $request->email ?? $customer->email;
-        $customer->phone = $request->phone ?? $customer->phone;
-
-        if ($request->filled('password')) {
-            $customer->password = bcrypt($request->password);
-        }
-
-        $customer->save();
-
-        return response()->json($customer);
-    }
-
-
     public function destroy(Request $request)
     {
         $request->user()->tokens()->delete();
 
         return response()->json(['message' => 'Đăng xuất thành công']);
+    }
+
+    // Lấy danh sách tất cả người dùng cho admin
+    public function listAll()
+    {
+        $customers = Customers::all();
+        return response()->json($customers);
+    }
+
+    // Khoá hoặc mở khoá tài khoản khách hàng
+    public function lockUnlock($id, Request $request)
+    {
+        $customer = Customers::find($id);
+        if (!$customer) {
+            return response()->json(['message' => 'Không tìm thấy khách hàng'], 404);
+        }
+
+        $request->validate([
+            'status' => 'required|in:active,locked,0,1'
+        ]);
+
+        // Nếu dùng kiểu boolean: 1 (active), 0 (locked)
+        // Nếu dùng kiểu string: 'active', 'locked'
+        $customer->status = $request->status;
+        $customer->save();
+
+        return response()->json([
+            'message' => $customer->status == 'locked' || $customer->status == 0 ? 'Đã khoá tài khoản' : 'Đã mở khoá tài khoản',
+            'customer' => $customer
+        ]);
+    }
+
+    public function updateRole(Request $request, $id)
+    {
+        // Kiểm tra user hiện tại có phải admin không
+        $user = Auth::user();
+        if (!$user || $user->role !== 'admin') {
+            return response()->json(['message' => 'bạn không phải admin'], 403);
+        }
+
+        $request->validate([
+            'role' => 'required|in:user,admin,ordermanger,menumanger',
+        ]);
+
+        $customer = Customers::findOrFail($id);
+        $customer->role = $request->role;
+        $customer->save();
+
+        return response()->json(['message' => 'Role updated successfully', 'customer' => $customer]);
     }
 }

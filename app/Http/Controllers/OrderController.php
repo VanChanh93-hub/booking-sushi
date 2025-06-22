@@ -10,27 +10,29 @@ use App\Models\OrderTable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Config;
 class OrderController extends Controller
 {
     //  Danh sách đơn
+    // Lấy danh sách đơn hàng (chỉ trả về danh sách, không kèm chi tiết)
     public function index(Request $request)
     {
-        $query = Order::with('table', 'customer')->latest();
+        $query = Order::query();
 
         if ($request->has('keyword')) {
             $keyword = $request->keyword;
-
             $query->whereHas('customer', function ($q) use ($keyword) {
                 $q->where('name', 'like', "%$keyword%");
-            })->orWhereHas('table', function ($q) use ($keyword) {
+            })->orWhereHas('tables', function ($q) use ($keyword) {
                 $q->where('table_number', 'like', "%$keyword%");
             })->orWhere('status', 'like', "%$keyword%");
         }
-        return response()->json($query->get());
+
+        // Lấy danh sách đơn hàng, có thể kèm customer và tables nếu muốn
+        $orders = $query->with('customer', 'tables')->latest()->get();
+
+        return response()->json($orders);
     }
-
-
 
     //  Xoá đơn
     public function destroy($id)
@@ -41,12 +43,14 @@ class OrderController extends Controller
         return response()->json(['message' => 'Order deleted']);
     }
 
+    // Lấy chi tiết đơn hàng (kèm các quan hệ liên quan)
     public function show($id)
     {
         $order = Order::with([
             'customer',
-            'tables', // quan hệ nhiều-nhiều với bảng bàn
-            'items.food' // các món ăn trong đơn, nếu có quan hệ food trong OrderItem
+            'tables',
+            'items.food',
+            'items.combo'
         ])->find($id);
 
         if (!$order) {
@@ -59,12 +63,7 @@ class OrderController extends Controller
 
 
     // lấy ra đơn hàng
-    public function getOrder()
-    {
-        $order = Order::with("items")
-            ->select("id", "name", "status", "reservation_date", "reservation_time", "total_price")->get();
-        return response()->json($order);
-    }
+
     public function statsDashbroad()
     {
         $totalOrder = Order::where('status', 'confirmed')->count();
@@ -121,7 +120,6 @@ class OrderController extends Controller
     }
 
     if ($remainingGuests > 0) {
-        // Nếu không đủ bàn, dồn tất cả vào 1 bàn lớn nhất còn trống
         $largestTable = $availableTables->first();
         if ($largestTable) {
             // Tạo order trước
@@ -174,12 +172,23 @@ class OrderController extends Controller
                 }
             }
 
+            // Chuẩn bị dữ liệu thanh toán trả về FE
+            $paymentData = [
+                'order_id' => $order->id,
+                'amount' => $order->total_price,
+                'payment_method' => $order->payment_method,
+                'payment_code' => $order->payment_code,
+                'status' => $order->status,
+                // Có thể bổ sung các trường khác nếu cần
+            ];
+
             return response()->json([
                 'message' => 'Không đủ bàn, đã dồn tất cả khách vào 1 bàn lớn nhất còn trống!',
                 'order_id' => $order->id,
                 'order_table_ids' => $orderTableIds,
                 'selected_tables' => $selectedTables,
                 'ordered_foods' => $request->foods ?? [],
+                'payment' => $paymentData, // Thông tin thanh toán gửi FE
             ]);
         } else {
             return response()->json(['message' => 'Không còn bàn nào trống trong khung giờ này!'], 422);
@@ -192,15 +201,13 @@ class OrderController extends Controller
         'payment_method' => $request->payment_method,
         'voucher_id' => $request->voucher_id,
         'total_price' => $request->total_price,
-        'status' => 'confirmed',
+        'payment_status' => 'pending',
+        'status' => 'pending',
         'note' => $request->note,
     ]);
 
     // Tự động tạo payment_code nếu status là confirmed
-    if ($order->status === 'confirmed') {
-        $order->payment_code = strtoupper(uniqid('PAY'));
-        $order->save();
-    }
+
 
     // Gán bàn vào order_tables
     $orderTableIds = [];
@@ -244,19 +251,24 @@ class OrderController extends Controller
         }
     }
 
-    // Sau khi thanh toán thành công, tự tạo payment_code (ví dụ: random chuỗi)
-    // Ví dụ: nếu bạn muốn tạo mã khi status là confirmed
-    if ($order->status === 'confirmed' && empty($order->payment_code)) {
-        $order->payment_code = strtoupper(uniqid('PAY'));
-        $order->save();
-    }
 
+
+    // Chuẩn bị dữ liệu thanh toán trả về FE
+    $paymentData = [
+        'order_id' => $order->id,
+        'amount' => $order->total_price,
+        'payment_method' => $order->payment_method,
+        'status' => $order->status,
+        'payment_status' => $order->payment_status,
+        // Có thể bổ sung các trường khác nếu cần
+    ];
     return response()->json([
         'message' => 'Đặt bàn thành công',
         'order_id' => $order->id,
         'ids_tables' => $orderTableIds,
         'selected_tables' => $selectedTables,
         'ordered_foods' => $request->foods ?? [],
+        'payment' => $paymentData, // Thông tin thanh toán gửi FE
     ]);
    }
 
@@ -291,12 +303,55 @@ class OrderController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $order = Order::findOrFail($id);
-        $order->status = $request->status ?? 'pending';
-        $order->save();
+
+        $validated = $request->validate([
+            'status' => 'required|in:pending,confirmed,success,cancelled'
+        ]);
+        $order->status = $validated['status'];
         if ($order->status == 'success') {
+            $order->save();
             $this->addPoint($order);
-            return response()->json(['message' => 'đã tích điểm']);
+            return response()->json(['message' => 'Đã tích điểm', 'order' => $order]);
         }
+        $order->save();
         return response()->json(['message' => 'Trạng thái đơn hàng đã được cập nhật', 'order' => $order]);
     }
+
+    public function orderHistory($id_customer)
+    {
+        $orders = Order::where('customer_id', $id_customer)
+            ->orderBy('created_at', 'desc')
+            ->with(['orderItems.food'])
+            ->get();
+
+        $result = $orders->map(function ($order) {
+            return [
+                'order_id' => $order->id,
+                'total_price' => $order->total_price,
+                'status' => $order->status,
+                'created_at' => $order->created_at,
+                'items' => $order->orderItems->map(function ($item) {
+                    return [
+                        'food_name' => optional($item->food)->name,
+                        'quantity' => $item->quantity,
+                        'price' => $item->price,
+                    ];
+                }),
+            ];
+        });
+
+        return response()->json($result);
+    }
+
+    public function cancelOrder($order_id)
+    {
+        $order = Order::find($order_id);
+        if (!$order) {
+            return response()->json(['message' => 'Order not found'], 404);
+        }
+        $order->status = 'cancelled';
+        $order->save();
+        return response()->json(['message' => 'Order cancelled successfully']);
+    }
+
 }

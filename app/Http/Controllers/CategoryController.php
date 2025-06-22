@@ -61,18 +61,4 @@ class CategoryController extends Controller
             'data' => $category
         ]);
     }
-
-
-    public function destroy($id)
-    {
-        $category = Category::find($id);
-
-        if (!$category) {
-            return response()->json(['message' => 'Category not found.'], 404);
-        }
-
-        $category->delete();
-
-        return response()->json(['message' => 'Category deleted successfully.']);
-    }
 }
