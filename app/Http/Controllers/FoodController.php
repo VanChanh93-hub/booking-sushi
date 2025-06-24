@@ -18,24 +18,27 @@ class FoodController extends Controller
         ]);
     }
 
-    public function getFoodsByCategory($categoryId)
-    {
-        $foods = Food::where('category_id', $categoryId)
-                    ->where('status', true)
-                    ->with(['category', 'group'])
-                    ->get();
+    // public function getFoodsByCategory($categoryId)
+    // {
+    //     $foods = Food::where('category_id', $categoryId)
+    //         ->where('status', true)
+    //         ->with('category')
+    //         ->get();
+    //                 ->where('status', true)
+    //                 ->with(['category', 'group'])
+    //                 ->get();
 
-        if ($foods->isEmpty()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Không tìm thấy món ăn trong danh mục này'
-            ], 404);
-        }
+    //     if ($foods->isEmpty()) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'Không tìm thấy món ăn trong danh mục này'
+    //         ], 404);
+    //     }
 
-        return response()->json([
-            'data' => $foods
-        ]);
-    }
+    //     return response()->json([
+    //         'data' => $foods
+    //     ]);
+    // }
 
     // Thêm món mới
     public function store(Request $request)
@@ -119,7 +122,6 @@ class FoodController extends Controller
             'data' => $groups
         ]);
     }
-
     // Lấy danh sách món ăn theo category, nếu có foodgroup thì trả về theo group, nếu không thì trả về theo category
     public function foodsByCategoryWithGroups($categoryId)
     {
@@ -142,7 +144,7 @@ class FoodController extends Controller
             ]);
         } else {
             // Không có foodgroup, trả về danh sách món ăn theo category
-            $foods = \App\Models\Food::where('category_id', $categoryId)
+            $foods = Food::where('category_id', $categoryId)
                 ->where('status', true)
                 ->with('category')
                 ->get();
@@ -152,6 +154,7 @@ class FoodController extends Controller
             ]);
         }
     }
+<<<<<<< HEAD
     public function updateStatus(Request $request, $id)
     {
         $food = Food::find($id);
@@ -173,3 +176,6 @@ class FoodController extends Controller
         ]);
     }
 }
+=======
+}
+>>>>>>> ed84cc5c7f0868cebfdab35c8810dfbe2bb844cd
