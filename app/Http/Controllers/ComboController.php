@@ -20,14 +20,16 @@ class ComboController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function updateStatus(Request $request, string $id)
     {
-        //
+        $combo = Combo::findOrFail($id);
+        $validated = $request->validate([
+            'status' => 'required|boolean',
+        ]);
+        $combo->status = $validated['status'];
+        $combo->save();
+        return response()->json(['message' => 'Combo status updated successfully', 'combo' => $combo]);
     }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         // Validate input

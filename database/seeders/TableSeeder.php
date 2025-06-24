@@ -49,7 +49,7 @@ class TableSeeder extends Seeder
             ],
             [
                 'table_number' => 'T05',
-                'max_guests' => 10,
+                'max_guests' => 14,
                 'status' => 'available',
                 "qr_token" => Str::random(32),
                 'created_at' => now(),
@@ -89,7 +89,7 @@ class TableSeeder extends Seeder
             ],
             [
                 'table_number' => 'T10',
-                'max_guests' => 10,
+                'max_guests' => 9,
                 'status' => 'available',
                 'created_at' => now(),
                 'updated_at' => now(),

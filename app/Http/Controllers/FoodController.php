@@ -152,4 +152,24 @@ class FoodController extends Controller
             ]);
         }
     }
+    public function updateStatus(Request $request, $id)
+    {
+        $food = Food::find($id);
+
+        if (!$food) {
+            return response()->json(['message' => 'Food not found.'], 404);
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|boolean',
+        ]);
+
+        $food->status = $validated['status'];
+        $food->save();
+
+        return response()->json([
+            'message' => 'Food status updated successfully.',
+            'data' => $food->load(['category', 'group'])
+        ]);
+    }
 }

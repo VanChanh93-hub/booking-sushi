@@ -51,7 +51,7 @@ Route::get('/combos', [ComboController::class, 'index']); // Lấy danh sách co
 Route::get('/combos/{id}', [ComboController::class, 'show']); // Lấy chi tiết combo
 Route::post('/combo/insert-combos', [ComboController::class, 'store']); // Tạo mới combo
 Route::put('/combo/update-combo/{id}', [ComboController::class, 'update']); // Cập nhật combo
-
+Route::put('/combo/update-status/{id}', [ComboController::class, 'updateStatus']); // Cập nhật trạng thái combo
 
 
 
@@ -61,6 +61,8 @@ Route::get('foods/category/{categoryId}/groups', [FoodController::class, 'foodsB
 Route::post('/food/insert-food', [FoodController::class, 'store']);
 Route::put('food-update/{id}', [FoodController::class, 'update']);
 Route::get('/food/category/{id}', [FoodController::class, 'getFoodsByCategory']);
+Route::put('/food/update-status/{id}', [FoodController::class, 'updateStatus']);
+
 
 // foodgroup
 Route::get('/foodgroups', [\App\Http\Controllers\FoodgroupController::class, 'index']);
@@ -75,15 +77,12 @@ Route::put('/foodgroup/update-foodgroup/{id}', [\App\Http\Controllers\FoodgroupC
 Route::get('/category', [CategoryController::class, 'index']);
 Route::post('insert-category', [CategoryController::class, 'store']);
 Route::put('category-update/{id}', [CategoryController::class, 'update']);
+Route::put('category/update-status/{id}', [CategoryController::class, 'updateStatus']);
 
 
 
 
 
-
-// gg
-Route::get('auth/google/redirect', [GoogleController::class, 'redirect']);
-Route::put('food/{id}', [FoodController::class, 'update']);
 // customer
 
 
@@ -100,17 +99,21 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/customers/{id}/role', [CustomerController::class, 'updateRole'])->name('customers.updateRole');
 });
 Route::get('admin/customers', [CustomerController::class, 'listAll']);
-Route::put('customers/{id}/status', [CustomerController::class, 'lockUnlock']);Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink']);
+Route::put('customers/{id}/status', [CustomerController::class, 'lockUnlock']);
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink']);
 Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 
 
 
 
 
-// đơn hàng
+// google auth
 
 Route::get('auth/google/redirect', [GoogleController::class, 'redirect']);
 Route::get('auth/google/callback', [GoogleController::class, 'callback']);
+
+
+
 
 // voucher
 Route::get('/voucher', [\App\Http\Controllers\VoucherController::class, 'index']); // lấy all

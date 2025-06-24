@@ -21,11 +21,12 @@ http://127.0.0.1:8000/api/forgot-password // gửi mail
     "email": "nhapmail"
 }
 
-  http://127.0.0.1:8000/api/reset-password
+  http://127.0.0.1:8000/api/reset-password POST
   {
-    "token"   => "dan token",
-   "password" => "password reset",
-    }
+  "email": "user@example.com",
+  "code": "codemail",
+  "password": "newpassword"
+}
 
 ====================
 Đặt bàn không kèm món
@@ -98,7 +99,7 @@ http://127.0.0.1:8000/api/login
 }
 ======================
  Đăng Ký POST
- {
+{
     "email": "test@example.com",
     "password": "password123"
 }

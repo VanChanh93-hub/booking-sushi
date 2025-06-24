@@ -131,4 +131,32 @@ class CustomerController extends Controller
 
         return response()->json(['message' => 'Role updated successfully', 'customer' => $customer]);
     }
+
+    // Chỉnh sửa thông tin khách hàng
+    public function update(Request $request, $id)
+    {
+        $customer = Customers::find($id);
+        if (!$customer) {
+            return response()->json(['message' => 'Không tìm thấy khách hàng'], 404);
+        }
+
+        $request->validate([
+            'name'  => 'sometimes|required|string|max:255',
+            'phone' => 'sometimes|required|digits_between:10,15',
+        ]);
+
+        if ($request->has('name')) {
+            $customer->name = $request->name;
+        }
+        if ($request->has('phone')) {
+            $customer->phone = $request->phone;
+        }
+        // if ($request->has('email')) {
+        //     $customer->email = $request->email;
+        // }
+
+        $customer->save();
+
+        return response()->json(['message' => 'Cập nhật thông tin thành công', 'customer' => $customer]);
+    }
 }

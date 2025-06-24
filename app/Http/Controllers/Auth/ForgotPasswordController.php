@@ -5,6 +5,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use App\Models\Customer;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+
 class ForgotPasswordController extends Controller
 {
     public function sendResetLink(Request $request)
@@ -15,15 +19,23 @@ class ForgotPasswordController extends Controller
         if (!$user) {
             return response()->json(['message' => 'Email không tồn tại trong hệ thống.'], 404);
         }
-        $status = Password::sendResetLink(
-            $request->only('email')
+
+        $code = rand(100000, 999999);
+
+        // Lưu mã vào bảng password_reset_tokens
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $request->email],
+            [
+                'token' => bcrypt($code),
+                'created_at' => now()
+            ]
         );
 
-        if ($status === Password::RESET_LINK_SENT) {
-            return response()->json(['message' => 'Link đặt lại mật khẩu đã được gửi!'], 200);
-        }
-
-        return response()->json(['message' => 'Không thể gửi link đặt lại mật khẩu.'], 400);
+        Mail::raw("Mã xác thực đặt lại mật khẩu của bạn là: $code", function ($message) use ($request) {
+            $message->to($request->email)
+                ->subject('Mã xác thực đặt lại mật khẩu');
+        });
+        return response()->json(['message' => 'Mã xác thực đã được gửi tới email của bạn!'], 200);
     }
 
 }
