@@ -12,6 +12,15 @@ class VNPayController extends Controller
     {
         $order = Order::findOrFail($request->order_id);
 
+        // ✅ Lấy số tiền thanh toán từ frontend gửi lên
+        $amount = (int) $request->input('amount', 0);
+
+        if ($amount < 5000 || $amount > 1000000000) {
+            return response()->json([
+                'message' => 'Số tiền không hợp lệ (tối thiểu 5.000đ, tối đa 1 tỷ)',
+            ], 422);
+        }
+
         $vnp_TmnCode = env('VNPAY_TMN_CODE');
         $vnp_HashSecret = env('VNPAY_HASH_SECRET');
         $vnp_Url = env('VNPAY_URL');
@@ -20,13 +29,13 @@ class VNPayController extends Controller
         $inputData = array(
             "vnp_Version" => "2.1.0",
             "vnp_TmnCode" => $vnp_TmnCode,
-            "vnp_Amount" => (int)($order->total_price * 100),
+            "vnp_Amount" => $amount * 100, // ✅ nhân 100 để quy đổi sang đơn vị VNPay
             "vnp_Command" => "pay",
             "vnp_CreateDate" => date('YmdHis'),
             "vnp_CurrCode" => "VND",
             "vnp_IpAddr" => request()->ip(),
             "vnp_Locale" => "vn",
-            "vnp_OrderInfo" => "Thanh toan don hang " . $order->id,
+            "vnp_OrderInfo" => "Thanh toán đơn hàng #" . $order->id,
             "vnp_OrderType" => "billpayment",
             "vnp_ReturnUrl" => $vnp_ReturnUrl,
             "vnp_TxnRef" => str_pad($order->id, 8, "0", STR_PAD_LEFT),
@@ -71,16 +80,15 @@ class VNPayController extends Controller
                 'payment_code' => $payment_code,
             ]);
 
-            return redirect('http://localhost:30003/payment-success');
+            return redirect('http://localhost:3000/payment-success');
         } else {
-            // Payment failed - clean up the order
+            // ❌ Thanh toán thất bại → xóa order và các liên kết
             if ($order) {
                 $order->items()->delete();
-                $order->tables()->detach();
+$order->tables()->detach();
                 $order->delete();
             }
-            return redirect('http://localhost:30003/payment-failed');
+            return redirect('http://localhost:3000/payment-failed');
         }
     }
 }
-

@@ -154,7 +154,6 @@ class FoodController extends Controller
             ]);
         }
     }
-<<<<<<< HEAD
     public function updateStatus(Request $request, $id)
     {
         $food = Food::find($id);
@@ -176,6 +175,4 @@ class FoodController extends Controller
         ]);
     }
 }
-=======
-}
->>>>>>> ed84cc5c7f0868cebfdab35c8810dfbe2bb844cd
+
