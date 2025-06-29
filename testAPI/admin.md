@@ -50,56 +50,7 @@ http://127.0.0.1:8000/api/foodgroup/update-foodgroup/{id}
 
 
 
-=========================
-lấy ra tất cả combo
-http://127.0.0.1:8000/api/combos GET
 
-======================
-
-lấy chi tiết combo
-
-http://127.0.0.1:8000/api/combos/{id} GET
-
-
-
-=========================
-
-Thêm combo
-
-
-http://127.0.0.1:8000/api/combo/insert-combos POST
-
-
-
-{
-    "name": "Combo Sushi Đặc Biệt",
-    "description": "Combo sushi tổng hợp cho 2 người",
-    "price": 299000,
-    "status": true,
-    "items": [
-        { "food_id": 1, "quantity": 2 },
-        { "food_id": 2, "quantity": 1 }
-    ]
-}
-
-=========================
-
-cập nhập combo
-
-
-http://127.0.0.1:8000/api/update-combo/{id} PUT
-
-
-{
-    "name": "Combo Sushi Siêu Cấp",
-    "description": "Combo sushi cho nhóm bạn",
-    "price": 399000,
-    "status": false,
-    "items": [
-        { "food_id": 3, "quantity": 3 },
-        { "food_id": 4, "quantity": 2 }
-    ]
-}
 =======================
 lấy ra tất cả order
 http://127.0.0.1:8000/api/orders GET
@@ -145,3 +96,94 @@ http://127.0.0.1:8000/api/customers/{id}/role  PUT
 {
   "role": "admin"
 }
+
+
+
+
+
+
+=========================
+lấy ra tất cả combo
+http://127.0.0.1:8000/api/combos GET
+
+======================
+
+lấy chi tiết combo
+
+http://127.0.0.1:8000/api/combos/{id} GET
+
+
+
+=========================
+
+Thêm combo
+
+
+http://127.0.0.1:8000/api/combo/insert-combos POST
+
+// khi muốn thêm luôn combo và food_id cùng lúc
+
+
+{
+    "name": "Combo Sushi Đặc Biệt",
+    "description": "Combo sushi tổng hợp cho 2 người",
+    "price": 299000,
+    "status": true,
+    "items": [
+        { "food_id": 1, "quantity": 2 },
+        { "food_id": 2, "quantity": 1 }
+    ]
+}
+
+=========================
+
+cập nhập combo
+
+http://127.0.0.1:8000/api/update-combo/{id} PUT
+
+
+{
+    "name": "Combo Sushi Siêu Cấp",
+    "description": "Combo sushi cho nhóm bạn",
+    "price": 399000,
+    "status": false,
+    "items": [
+        { "food_id": 3, "quantity": 3 },
+        { "food_id": 4, "quantity": 2 }
+    ]
+}
+
+=========================
+
+thêm combo rỗng chưa có food_id
+
+http://127.0.0.1:8000/api/combo/add-comboemp POST
+
+
+{
+    "name": "Combo Sushi Siêu Cấp",
+    "description": "Combo sushi cho nhóm bạn",
+    "price": 399000,
+    "status": false,
+}
+=========================
+
+http://127.0.0.1:8000/api/combos/add-food-combo/{id} POST
+
+thêm food_id vào combo
+{
+  "food_id": 5,
+  "quantity": 2
+}
+
+======================
+http://127.0.0.1:8000/api/combos/add-food-combo/{id} POST
+
+thêm food_id vào combo
+{
+  "food_id": 5,
+  "quantity": 2
+}
+
+
+

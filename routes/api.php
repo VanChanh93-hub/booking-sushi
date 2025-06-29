@@ -52,7 +52,9 @@ Route::get('/combos/{id}', [ComboController::class, 'show']); // Lấy chi tiế
 Route::post('/combo/insert-combos', [ComboController::class, 'store']); // Tạo mới combo
 Route::put('/combo/update-combo/{id}', [ComboController::class, 'update']); // Cập nhật combo
 Route::put('/combo/update-status/{id}', [ComboController::class, 'updateStatus']); // Cập nhật trạng thái combo
-
+Route::post('/combo/add-comboemp', [ComboController::class, 'createComboemp']); // Thêm món ăn vào combo
+Route::post('/combos/add-food-combo/{id}', [ComboController::class, 'addFoodCombo']);
+Route::delete('/combos/remove-food-combo/{combo_id}/{food_id}', [ComboController::class, 'destroyFoodId']);
 
 
 // food

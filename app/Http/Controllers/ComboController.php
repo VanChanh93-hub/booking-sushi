@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Combo;
 use App\Models\ComboItem;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 class ComboController extends Controller
 {
     /**
@@ -70,23 +71,75 @@ class ComboController extends Controller
 
         return response()->json(['message' => 'Combo created successfully', 'combo' => $combo], 201);
     }
+    public function createComboemp(Request $request){
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'image' => 'nullable|file|image|max:2048',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric',
+        ]);
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('combos', 'public');
+        }
+        $combo = Combo::create([
+            'name' => $validated['name'],
+            'image' => $imagePath,
+            'description' => $validated['description'] ?? null,
+            'price' => $validated['price'],
+            'status' => true, // Mặc định trạng thái là true
+        ]);
+        return response()->json($combo, 201);
+    }
+/**
+ * Adds a food item to an existing combo.
+ *
+ * This function validates the input request to ensure the food item exists
+ * and the quantity is a positive integer. It then checks if the specified
+ * combo exists and adds the food item to the combo in the database.
+ *
+ * @param Request $request The incoming request containing 'food_id' and 'quantity'.
+ * @param int $combo_id The ID of the combo to which the food item will be added.
+ * @return \Illuminate\Http\JsonResponse A JSON response indicating success.
+ * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If the combo does not exist.
+ */
 
-    /**
-     * Display the specified resource.
-     */
+    public function addFoodCombo(Request $request, $combo_id)
+    {
+        $request->validate([
+            'food_id' => 'required|exists:foods,id',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        // Kiểm tra combo_id có tồn tại không
+        $combo = Combo::findOrFail($combo_id);
+
+        DB::table('combo_items')->insert([
+            'combo_id' => $combo_id,
+            'food_id' => $request->food_id,
+            'quantity' => $request->quantity,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json(['message' => 'Thêm món ăn vào combo thành công']);
+    }
+    public function destroyFoodId(Request $request, $combo_id, $food_id)
+    {
+        $combo = Combo::findOrFail($combo_id);
+        DB::table('combo_items')
+            ->where('combo_id', $combo_id)
+            ->where('food_id', $food_id)
+            ->delete();
+
+        return response()->json(['message' => 'Món ăn đã được xoá khỏi combo'], 200);
+    }
     public function show(string $id)
     {
         $combo = Combo::with(['comboItems.food'])->findOrFail($id);
         return response()->json($combo);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
     public function update(Request $request, string $id)
     {
         // Validate input
