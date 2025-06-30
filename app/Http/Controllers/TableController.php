@@ -9,6 +9,8 @@ use App\Models\orderTable;
 use App\Models\Customer;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+
 
 class TableController extends Controller
 {
@@ -170,6 +172,8 @@ class TableController extends Controller
             'size' => 'required|integer|min:1',
             'max_guests' => 'required|integer|min:1',
             'status' => 'required|in:available,reserved,occupied',
+            'qr_token' => Str::random(32),
+
         ]);
 
         $table = Table::create($validated);

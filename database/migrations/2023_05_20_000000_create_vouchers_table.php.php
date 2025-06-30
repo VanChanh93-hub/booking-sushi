@@ -19,8 +19,11 @@ return new class extends Migration
             $table->date('end_date');
             $table->enum('status', ['active', 'expired', 'disabled'])->default("active");
             $table->integer('usage_limit');
+            $table->integer('used')->nullable()->default(0);
             $table->boolean('is_personal')->default(false);
-            $table->integer('required_points')->nullable();
+            $table->integer('required_total')->nullable()->default(0);
+            $table->string('describe')->nullable();
+            $table->integer('required_points')->nullable()->default(0);
             $table->timestamps();
         });
     }

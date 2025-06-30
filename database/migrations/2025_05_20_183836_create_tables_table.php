@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 return new class extends Migration
 {
@@ -15,9 +16,9 @@ return new class extends Migration
             $table->id();
             $table->string('table_number')->unique();
             $table->integer('max_guests');
-            $table->string('image')->nullable(); // e.g., indoor, outdoor, balcony
-            $table->string('status')->default('available'); // available, reserved, occupied
-            $table->string('qr_token')->unique();
+            $table->string('image')->nullable();
+            $table->string('status')->default('available');
+            $table->string('qr_token', 64)->unique();
             $table->timestamps();
         });
     }

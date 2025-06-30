@@ -38,13 +38,19 @@ class VoucherController extends Controller
     public function store(Request $request)
     {
         $vailidated = $request->validate([
-            'code' => 'required|string|max:255|unique:vouchers,code',
-            'usage_limit' => 'required|integer|min:1',
+            'code' => 'required|string|max:50|unique:vouchers,code',
             'discount_value' => 'required|numeric|min:0',
+            'usage_limit' => 'required|integer|min:1',
+            'used' => 'nullable|integer|min:0',
             'start_date' => 'required|date',
-            'end_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'status' => 'required|in:active,expired,disabled',
+            'is_personal' => 'sometimes|boolean',
+            'required_total' => 'nullable|integer|min:0',
             'required_points' => 'nullable|integer|min:0',
+            'describe' => 'nullable|string|max:255',
         ]);
+
         $voucher = Voucher::create($vailidated);
         return response()->json([
             'message' => 'tạo thành công',

@@ -50,47 +50,57 @@ class CustomerVoucherController extends Controller
 
         $customer = Customer::findOrFail($request->customer_id);
         $voucher = Voucher::findOrFail($request->voucher_id);
-
+        // check cus có voucher đó chưa
         $exists = CustomerVoucher::where('customer_id', $customer->id)
             ->where('voucher_id', $voucher->id)
             ->exists();
 
         if ($exists) {
-            return response()->json(["message" => "Bạn đã đổi voucher này rồi"]);
+            return response()->json(["message" => "Bạn đã đổi voucher này rồi"], 400);
+        }
+        if (!$voucher->is_personal) {
+            return response()->json(["message" => "Voucher này không phải là voucher cá nhân"], 400);
+        }
+        // check điểm của cus
+        if (is_null($voucher->required_points) || $customer->point < $voucher->required_points) {
+            $requiredPoints = $voucher->required_points - $customer->point;
+            return response()->json(["message" => "Bạn không đủ điểm để đổi voucher, bạn cần thêm " . $requiredPoints . ""], 400);
         }
 
-        if ($customer->point < $voucher->required_points) {
-            return response()->json(["message" => "Bạn không đủ điểm để đổi"]);
-        }
-
-        if ($voucher->usage_limit < 1) {
-            return response()->json(["message" => "Voucher này đã hết"]);
+        if ($voucher->used >= $voucher->usage_limit) {
+            return response()->json(["message" => "Voucher này đã hết lượt sử dụng"], 400);
         }
 
         $customer->point -= $voucher->required_points;
         $customer->save();
 
-        $voucher->usage_limit -= 1;
+        $voucher->used += 1;
         $voucher->save();
 
-        // Tạo voucher cá nhân
         CustomerVoucher::create([
             'customer_id' => $customer->id,
             'voucher_id' => $voucher->id,
             'assigned_at' => now(),
             'date' => $voucher->end_date,
-            'is_used' => 0
+            'is_used' => 0,
         ]);
 
         return response()->json([
-            "message" => "Đã đổi voucher thành công",
+            "message" => "Đổi voucher thành công",
             "voucher_info" => CustomerVoucher::where("customer_id", $customer->id)->get()
         ]);
     }
 
 
+
     public function applyVoucher(Request $request)
     {
+        $request->validate([
+            'customer' => 'required|exists:customers,id',
+            'total' => 'required|numeric|min:0',
+            'code' => 'required|string'
+        ]);
+
         $customerId = $request->customer;
         $total = $request->total;
         $voucherCode = $request->code;
@@ -105,15 +115,18 @@ class CustomerVoucherController extends Controller
             return response()->json(['message' => 'Voucher không tồn tại hoặc đã hết hạn'], 404);
         }
 
-        if ($voucher->is_personal) {
-            $customerVoucher = CustomerVoucher::where("customer_id", $customerId)
-                ->where("voucher_id", $voucher->id)
-                ->first();
+        // check điều kiện áp dụng 
+        if ($voucher->required_total && $total < $voucher->required_total) {
+            return response()->json(['message' => 'Đơn hàng không đủ điều kiện để áp dụng voucher'], 400);
+        }
 
-            if (!$customerVoucher) {
-                return response()->json(['message' => 'Bạn chưa đổi voucher này', "chekc" => $customerId], 403);
-            }
 
+        $customerVoucher = CustomerVoucher::where("customer_id", $customerId)
+            ->where("voucher_id", $voucher->id)
+            ->first();
+
+        if ($customerVoucher) {
+            // Áp dụng voucher cá nhân
             if ($customerVoucher->is_used) {
                 return response()->json(['message' => 'Bạn đã sử dụng voucher này rồi'], 400);
             }
@@ -121,20 +134,23 @@ class CustomerVoucherController extends Controller
             $customerVoucher->is_used = 1;
             $customerVoucher->save();
         } else {
-            // Voucher dùng chung
-            if ($voucher->usage_limit <= 0) {
-                return response()->json(['message' => 'Voucher đã hết lượt sử dụng', "vheck" => $voucher->usage_limit], 400);
+            // Áp dụng voucher dùng chung
+            if ($voucher->used >= $voucher->usage_limit) {
+                return response()->json(['message' => 'Voucher đã hết lượt sử dụng'], 400);
             }
 
+            $voucher->used += 1;
             $voucher->usage_limit -= 1;
             $voucher->save();
         }
 
+        // Tính giá sau khi giảm
         $discount = $voucher->discount_value;
         $newTotal = max(0, $total - $discount);
 
         return response()->json([
-            'message' => 'Voucher áp dụng thành công',
+            'message' => 'Áp dụng voucher thành công',
+            'discount' => $discount,
             'new_total' => $newTotal,
         ]);
     }
