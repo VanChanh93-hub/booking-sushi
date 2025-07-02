@@ -321,7 +321,7 @@ class OrderController extends Controller
     {
         $orders = Order::where('customer_id', $id_customer)
             ->orderBy('created_at', 'desc')
-            ->with(['orderItems.food'])
+            ->with(['orderItems.food','orderItems.combo'])
             ->get();
 
         $result = $orders->map(function ($order) {
@@ -333,6 +333,7 @@ class OrderController extends Controller
                 'items' => $order->orderItems->map(function ($item) {
                     return [
                         'food_name' => optional($item->food)->name,
+                        'combo_name' => optional($item->combo)->name,
                         'quantity' => $item->quantity,
                         'price' => $item->price,
                     ];
