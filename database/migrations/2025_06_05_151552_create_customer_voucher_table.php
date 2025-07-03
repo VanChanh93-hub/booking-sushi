@@ -21,6 +21,6 @@ class CreateCustomerVoucherTable extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('customer_voucher');
+        Schema::dropIfExists('customer_vouchers');
     }
 }

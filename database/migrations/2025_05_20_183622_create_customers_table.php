@@ -28,6 +28,7 @@ return new class extends Migration
 
     public function down()
     {
+        Schema::dropIfExists('customer_vouchers'); // Drop bảng con trước
         Schema::dropIfExists('customers');
     }
 };
