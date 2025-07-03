@@ -16,40 +16,30 @@ class feedbackController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'order_id' => 'required|integer',
+            'customer_id' => 'required|exists:customers,id',
+            'order_id' => 'required|exists:order_items,id',
             'rating' => 'required|integer|min:1|max:5',
-            'comment' => 'nullable|string|max:500',
-            'customer_id' => 'required|integer',
+            'comment' => 'nullable|string',
+            'title' => 'nullable|string',
+            'content' => 'nullable|string',
         ]);
-        if ($validated['rating'] < 1 || $validated['rating'] > 5) {
-            return response()->json(['message' => 'Đánh giá phải từ 1 đến 5'], 422);
-        }
-        // ktra đã có feedback cho order_id và customer_id chưa
-        $existingFeedback = feedback::where('order_id', $validated['order_id'])
+
+        // Kiểm tra feedback đã tồn tại chưa
+        $existingFeedback = Feedback::where('order_id', $validated['order_id'])
             ->where('customer_id', $validated['customer_id'])
             ->first();
+
         if ($existingFeedback) {
-            return response()->json(['message' => 'Bạnfeedback cho đơn hàng này rồi'], 422);
+            return response()->json(['message' => 'Bạn đã gửi đánh giá cho đơn hàng này rồi'], 422);
         }
-        $feedback = feedback::create($validated);
+
+        $feedback = Feedback::create($validated);
 
         return response()->json([
-            'message' => 'thành công',
+            'message' => 'Gửi đánh giá thành công',
             'data' => $feedback,
         ], 201);
     }
-    public function show($id)
-    {
-        $feedback = feedback::find($id);
-        if (!$feedback) {
-            return response()->json(['message' => 'Feedback không tồn tại'], 404);
-        }
-        return response()->json([
-            'message' => 'Thông tin feedback',
-            'data' => $feedback
-        ]);
-    }
-
     public function getFeedbackByOrderId($orderId)
     {
         $feedbacks = feedback::where('order_id', $orderId)->get();
@@ -61,15 +51,7 @@ class feedbackController extends Controller
             'data' => $feedbacks
         ]);
     }
-    public function destroy($id)
-    {
-        $feedback = feedback::find($id);
-        if (!$feedback) {
-            return response()->json(['message' => 'Feedback không tồn tại'], 404);
-        }
-        $feedback->delete();
-        return response()->json(['message' => 'Xóa feedback thành công']);
-    }
+
 
     public function getFeedbackByCustomerId($customerId)
     {

@@ -14,6 +14,8 @@ use App\Http\Controllers\GoogleController;
 use App\Http\Controllers\OrderItemController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\RecommendationController;
+use App\Http\Controllers\ChatController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -91,9 +93,14 @@ Route::delete('/voucher/{id}', [VoucherController::class, 'destroy']); // xoá
 
 Route::post('/exchangePoints', [CustomerVoucherController::class, 'exchangePoints']);
 Route::post('/applyVoucher', [CustomerVoucherController::class, 'applyVoucher']);
+Route::post('/aV', [CustomerVoucherController::class, 'themV']);
 
 
 
 Route::post('/table/info/{token}', [OrderTableController::class, 'getTableInfo']); // kiểm tra bàn
 Route::post('/orderItem/add', [OrderItemController::class, 'addItem']);
 Route::get('/getItemsByOrderId/{id}', [OrderItemController::class, 'getItemsByOrderId']);
+
+//ai
+Route::get('/recommendations/{customerId}', [RecommendationController::class, 'tasteProfile']);
+Route::post('/chat', [ChatController::class, 'chat']);

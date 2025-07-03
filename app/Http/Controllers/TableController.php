@@ -169,13 +169,12 @@ class TableController extends Controller
     {
         $validated = $request->validate([
             'table_number' => 'required|string|max:255|unique:tables,table_number',
-            'size' => 'required|integer|min:1',
             'max_guests' => 'required|integer|min:1',
             'status' => 'required|in:available,reserved,occupied',
-            'qr_token' => Str::random(32),
-
+            "qr_token" => 'nullable|string|max:64|unique:tables,qr_token',
         ]);
-
+        // Tạo mã QR token duy nhất cho bàn
+        $validated['qr_token'] = Str::random(64);
         $table = Table::create($validated);
         return response()->json($table, 201);
     }

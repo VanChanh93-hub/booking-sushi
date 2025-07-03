@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('max_guests');
             $table->string('image')->nullable();
             $table->string('status')->default('available');
-            $table->string('qr_token', 64)->unique();
+            $table->string('qr_token', 64)->unique()->nullable();
             $table->timestamps();
         });
     }

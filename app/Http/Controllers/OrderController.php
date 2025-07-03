@@ -262,19 +262,31 @@ class OrderController extends Controller
 
     public function addPoint($order)
     {
-        $pointsEarned = floor($order->total_price / 10000);
         $customer = Customer::find($order->customer_id);
         if (!$customer) {
             return response()->json(['message' => 'Khách hàng không tồn tại'], 404);
         }
-        $customer->point += $pointsEarned;
-        $customer->membership_level = $this->calculateMembershipLevel($customer->point);
-        $customer->save();
+
+        if ($order->total_price >= 200000) {
+            $pointsEarned = floor($order->total_price / 200000) * 10;
+
+            $customer->point += $pointsEarned;
+            $customer->point_available += $pointsEarned;
+            $customer->membership_level = $this->calculateMembershipLevel($customer->point);
+            $customer->save();
+
+            return response()->json([
+                'message' => 'Điểm thưởng đã được cộng',
+                'points' => $customer->point,
+            ]);
+        }
+
         return response()->json([
-            'message' => 'Điểm thưởng đã được cộng',
+            'message' => 'Hóa đơn chưa đủ điều kiện để cộng điểm',
             'points' => $customer->point,
         ]);
     }
+
     private function calculateMembershipLevel($points)
     {
         if ($points >= 5000) {

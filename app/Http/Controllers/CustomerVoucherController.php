@@ -154,4 +154,41 @@ class CustomerVoucherController extends Controller
             'new_total' => $newTotal,
         ]);
     }
+    public function themV(Request $request)
+    {
+        $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+            'voucher_id' => 'required|exists:vouchers,id',
+        ]);
+
+        $customerId = $request->customer_id;
+        $voucherId = $request->voucher_id;
+        $customer = Customer::findOrFail($customerId);
+        $exists = CustomerVoucher::where('customer_id', $customerId)
+            ->where('voucher_id', $voucherId)
+            ->exists();
+
+        if ($exists) {
+            return response()->json(['message' => 'Voucher đã được thêm cho khách hàng này'], 400);
+        }
+        if ($customer->point_available < 50) {
+            return response()->json(['message' => 'Khách hàng không đủ điểm để đổi voucher'], 400);
+        }
+        CustomerVoucher::create([
+            'customer_id' => $customerId,
+            'voucher_id' => $voucherId,
+            'assigned_at' => now(),
+            'date' => now()->addDays(30)
+        ]);
+        $customer->point_available -= 50;
+        $customer->save();
+
+        return response()->json([
+            'message' => 'Voucher đã được thêm thành công',
+            'customer_id' => $customerId,
+            'voucher_id' => $voucherId,
+            'assigned_at' => now(),
+            'date' => now()->addDays(30)
+        ]);
+    }
 }

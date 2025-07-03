@@ -44,4 +44,8 @@ class Customer extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+    public function preference()
+    {
+        return $this->hasOne(UserPreference::class);
+    }
 }
