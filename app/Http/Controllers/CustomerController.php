@@ -45,6 +45,7 @@ class CustomerController extends Controller
     }
 
 
+
     public function login(Request $request)
     {
         $request->validate([
@@ -102,8 +103,6 @@ class CustomerController extends Controller
             'status' => 'required|in:active,locked,0,1'
         ]);
 
-        // Nếu dùng kiểu boolean: 1 (active), 0 (locked)
-        // Nếu dùng kiểu string: 'active', 'locked'
         $customer->status = $request->status;
         $customer->save();
 
@@ -122,7 +121,7 @@ class CustomerController extends Controller
         }
 
         $request->validate([
-            'role' => 'required|in:user,admin,ordermanger,menumanger',
+            'role' => 'required|in:user,admin,manager,chef',
         ]);
 
         $customer = Customers::findOrFail($id);
@@ -151,10 +150,6 @@ class CustomerController extends Controller
         if ($request->has('phone')) {
             $customer->phone = $request->phone;
         }
-        // if ($request->has('email')) {
-        //     $customer->email = $request->email;
-        // }
-
         $customer->save();
 
         return response()->json(['message' => 'Cập nhật thông tin thành công', 'customer' => $customer]);

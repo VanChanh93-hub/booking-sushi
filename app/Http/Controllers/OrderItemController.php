@@ -81,7 +81,7 @@ class OrderItemController extends Controller
         $orderItem = OrderItem::findOrFail($id);
 
         $validated = $request->validate([
-            'status' => 'required|in:pending,serve,done,cancelled'
+            'status' => 'required|in:pending,preparing,served,done,cancelled'
         ]);
 
         $orderItem->status = $validated['status'];

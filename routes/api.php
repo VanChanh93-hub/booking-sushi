@@ -93,13 +93,14 @@ Route::put('category/update-status/{id}', [CategoryController::class, 'updateSta
 
 Route::post('/login', [CustomerController::class, "login"]);
 Route::post('/register', [CustomerController::class, "store"]);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [CustomerController::class, 'index']);
     Route::get('/logout', [CustomerController::class, 'destroy']);
-});
-Route::middleware(['auth'])->group(function () {
     Route::put('/customers/{id}/role', [CustomerController::class, 'updateRole'])->name('customers.updateRole');
+
 });
+
 Route::get('admin/customers', [CustomerController::class, 'listAll']);
 Route::put('customers/{id}/status', [CustomerController::class, 'lockUnlock']);
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink']);
