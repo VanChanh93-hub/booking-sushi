@@ -129,7 +129,7 @@ Route::delete('/voucher/{id}', [VoucherController::class, 'destroy']); // xoá
 
 Route::post('/exchangePoints', [CustomerVoucherController::class, 'exchangePoints']);
 Route::post('/applyVoucher', [CustomerVoucherController::class, 'applyVoucher']);
-Route::post('/aV', [CustomerVoucherController::class, 'themV']);
+Route::post('/themVoucherWheel', [CustomerVoucherController::class, 'store']);
 
 
 

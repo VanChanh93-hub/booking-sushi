@@ -154,7 +154,7 @@ class CustomerVoucherController extends Controller
             'new_total' => $newTotal,
         ]);
     }
-    public function themV(Request $request)
+    public function store(Request $request)
     {
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
