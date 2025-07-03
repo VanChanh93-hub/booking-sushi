@@ -15,6 +15,7 @@ class Table extends Model
         'imgae',
         'max_guests',
         'status',
+        'qr_token',
     ];
 
     // Sửa lại relationship đúng tên

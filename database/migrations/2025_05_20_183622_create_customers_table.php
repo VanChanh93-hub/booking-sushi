@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('email', 100)->unique();
             $table->string('phone', 20)->nullable();
             $table->integer('point')->default(0);
+            $table->integer('point_available')->default(0);
             $table->string('password', 255);
             $table->string('membership_level', 50)->nullable();
             $table->enum('role', ['user', 'admin', 'manager','chef'])->default('user');

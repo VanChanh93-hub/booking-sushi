@@ -36,7 +36,6 @@ class CustomerController extends Controller
         ]);
 
         $token = $customer->createToken('authen_token')->plainTextToken;
-
         return response()->json([
             'access_token' => $token,
             'token_type'   => 'Bearer',

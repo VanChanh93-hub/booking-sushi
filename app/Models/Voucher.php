@@ -8,12 +8,19 @@ class Voucher extends Model
 {
     protected $fillable = [
         'code',
-        'usage_limit',
         'discount_value',
         'start_date',
         'end_date',
         'status',
+        'usage_limit',
+        'used',
+        'is_personal',
+        'required_total',
+        'describe',
+        'required_points',
     ];
+
+
 
     public function orders()
     {

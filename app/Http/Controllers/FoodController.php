@@ -13,6 +13,27 @@ class FoodController extends Controller
     public function index(Request $request)
     {
         $foods = Food::with(['category', 'group'])->get();
+        $query = Food::get();
+
+        return response()->json([
+            'data' => $query
+        ]);
+    }
+
+    public function getFoodsByCategory($categoryId)
+    {
+        $foods = Food::where('category_id', $categoryId)
+            ->where('status', true)
+            ->with('category')
+            ->get();
+
+        if ($foods->isEmpty()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Không tìm thấy món ăn trong danh mục này'
+            ], 404);
+        }
+
         return response()->json([
             'data' => $foods
         ]);
@@ -40,7 +61,7 @@ class FoodController extends Controller
     //     ]);
     // }
 
-    // Thêm món mới
+    // Tạo món mới
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -175,4 +196,3 @@ class FoodController extends Controller
         ]);
     }
 }
-

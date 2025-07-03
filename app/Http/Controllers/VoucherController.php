@@ -38,13 +38,21 @@ class VoucherController extends Controller
     public function store(Request $request)
     {
         $vailidated = $request->validate([
-            'code' => 'required|string|max:255|unique:vouchers,code',
-            'usage_limit' => 'required|integer|min:1',
+            'code' => 'required|string|max:50|unique:vouchers,code',
             'discount_value' => 'required|numeric|min:0',
+            'usage_limit' => 'required|integer|min:1',
+            'used' => 'nullable|integer|min:0',
             'start_date' => 'required|date',
             'end_date' => 'required|date',
             'required_points' => 'nullable|integer|min:0',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'status' => 'required|in:active,expired,disabled',
+            'is_personal' => 'sometimes|boolean',
+            'required_total' => 'nullable|integer|min:0',
+            'required_points' => 'nullable|integer|min:0',
+            'describe' => 'nullable|string|max:255',
         ]);
+
         $voucher = Voucher::create($vailidated);
         return response()->json([
             'message' => 'tạo thành công',
@@ -101,31 +109,5 @@ class VoucherController extends Controller
         return response()->json([
             'message' => 'Xóa thành công',
         ], 200);
-    }
-    public function applyVoucher(Request  $request)
-    {
-        $total = $request->total;
-        $voucherCode = $request->code;
-        $voucher = Voucher::where('code', $voucherCode)
-            ->where('status', 'active')
-            ->where('start_date', '<=', now())
-            ->where('end_date', '>=', now())
-            ->first();
-        if (!$voucher) {
-            return response()->json(['message' => 'voucher không tồn tại'], 404);
-        }
-        if ($voucher->usage_limit <= 0) {
-            return response()->json(['message' => 'Voucher đã hết lượt sử dụng'], 400);
-        }
-
-        $voucher->usage_limit -= 1;
-        $voucher->save();
-        $discount = $voucher->discount_value;
-        $newTotal = max(0, $total - $discount);
-
-        return response()->json([
-            'message' => 'Voucher áp dụng thành công',
-            'new_total' => $newTotal,
-        ]);
     }
 }
