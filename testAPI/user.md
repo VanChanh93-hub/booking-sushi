@@ -101,9 +101,27 @@ http://127.0.0.1:8000/api/orders/history/{id_customer} GET
 huỷ đơn hàng
 http://127.0.0.1:8000/api/orders/cancel/{id_order} POST
 
-khi quay xong gửi voucher để lưu
+flow dùng tích điểm
+update status của order
+http://127.0.0.1:8000/api/order/update-status/{id}
+{
+"status":"success"
+}
+khi đơn hàng thành công => tự động tích điểm, check rank dựa vào điểm
+
+flow dùng voucher khi quay vòng may mắn
+khi quay xong thì client gửi id (customer và voucher) để lưu
 http://127.0.0.1:8000/api/themVoucherWheel POST
 {
 "customer_id": 1,
 "voucher_id": 1
+}
+
+flow sử dung voucher
+trong lúc đặt hàng nhập voucher click sử dụng gửi về BE check mã voucher trả về kq (thành công thì trả về số tiền dc giảm)
+http://127.0.0.1:8000/api/applyVoucher POST
+{
+"code": "SUMMER2025",
+"customer": 4,
+"total":300000
 }

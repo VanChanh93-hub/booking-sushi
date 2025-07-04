@@ -127,7 +127,7 @@ Route::get('/voucher/{id}', [VoucherController::class, 'show']); // lấy chi ti
 Route::put('/voucher/{id}', [VoucherController::class, 'update']); // cập nhật
 Route::delete('/voucher/{id}', [VoucherController::class, 'destroy']); // xoá
 
-Route::post('/exchangePoints', [CustomerVoucherController::class, 'exchangePoints']);
+// Route::post('/exchangePoints', [CustomerVoucherController::class, 'exchangePoints']);
 Route::post('/applyVoucher', [CustomerVoucherController::class, 'applyVoucher']);
 Route::post('/themVoucherWheel', [CustomerVoucherController::class, 'store']);
 
