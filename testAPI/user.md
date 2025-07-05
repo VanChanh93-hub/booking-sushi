@@ -125,3 +125,8 @@ http://127.0.0.1:8000/api/applyVoucher POST
 "customer": 4,
 "total":300000
 }
+lấy ra voucher của user
+http://127.0.0.1:8000/api/getAllVoucherByUser/{id} get
+
+lấy all voucher dành cho khách hàng
+http://127.0.0.1:8000/api/voucherForCustomer get

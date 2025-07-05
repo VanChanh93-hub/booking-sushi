@@ -71,15 +71,6 @@ class VoucherController extends Controller
         }
         return response()->json($voucher, 200);
     }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Voucher $voucher) {}
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request,  $id)
     {
         $voucher = Voucher::find($id);
@@ -100,14 +91,23 @@ class VoucherController extends Controller
         ], 200);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+
     public function destroy(Voucher $voucher)
     {
         $voucher->delete();
         return response()->json([
             'message' => 'Xóa thành công',
         ], 200);
+    }
+    public function getVoucherforCustomer()
+    {
+
+        $vouchers = Voucher::where('is_personal', 1)
+            ->where('status', 'active')
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->get(['id', 'code', 'discount_value']);
+
+        return response()->json($vouchers);
     }
 }

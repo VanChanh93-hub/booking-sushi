@@ -121,8 +121,8 @@ Route::get('auth/google/callback', [GoogleController::class, 'callback']);
 
 // voucher
 Route::get('/voucher', [VoucherController::class, 'index']); // lấy all
-
 Route::post('/voucher', [VoucherController::class, 'store']); // tạo mới
+Route::get('/voucherForCustomer', [VoucherController::class, 'getVoucherforCustomer']); // lấy tất cả voucher cho khách hàng
 Route::get('/voucher/{id}', [VoucherController::class, 'show']); // lấy chi tiết
 Route::put('/voucher/{id}', [VoucherController::class, 'update']); // cập nhật
 Route::delete('/voucher/{id}', [VoucherController::class, 'destroy']); // xoá
@@ -130,6 +130,7 @@ Route::delete('/voucher/{id}', [VoucherController::class, 'destroy']); // xoá
 // Route::post('/exchangePoints', [CustomerVoucherController::class, 'exchangePoints']);
 Route::post('/applyVoucher', [CustomerVoucherController::class, 'applyVoucher']);
 Route::post('/themVoucherWheel', [CustomerVoucherController::class, 'store']);
+Route::get('/getAllVoucherByUser/{id}', [CustomerVoucherController::class, 'index']);
 
 
 
