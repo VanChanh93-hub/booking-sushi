@@ -94,66 +94,69 @@ class CustomerVoucherController extends Controller
 
 
     public function applyVoucher(Request $request)
-    {
-        $request->validate([
-            'customer' => 'required|exists:customers,id',
-            'total' => 'required|numeric|min:0',
-            'code' => 'required|string'
-        ]);
+{
+    $request->validate([
+        'customer' => 'required|exists:customers,id',
+        'total' => 'required|numeric|min:0',
+        'code' => 'required|string'
+    ]);
 
-        $customerId = $request->customer;
-        $total = $request->total;
-        $voucherCode = $request->code;
+    $customerId = $request->customer;
+    $total = $request->total;
+    $voucherCode = $request->code;
 
-        $voucher = Voucher::where('code', $voucherCode)
-            ->where('status', 'active')
-            ->where('start_date', '<=', now())
-            ->where('end_date', '>=', now())
-            ->first();
+    $voucher = Voucher::where('code', $voucherCode)
+        ->where('status', 'active')
+        ->where('start_date', '<=', now())
+        ->where('end_date', '>=', now())
+        ->first();
 
-        if (!$voucher) {
-            return response()->json(['message' => 'Voucher không tồn tại hoặc đã hết hạn'], 404);
-        }
-
-        // check điều kiện áp dụng 
-        if ($voucher->required_total && $total < $voucher->required_total) {
-            return response()->json(['message' => 'Đơn hàng không đủ điều kiện để áp dụng voucher'], 400);
-        }
-
-
-        $customerVoucher = CustomerVoucher::where("customer_id", $customerId)
-            ->where("voucher_id", $voucher->id)
-            ->first();
-
-        if ($customerVoucher) {
-            // Áp dụng voucher cá nhân
-            if ($customerVoucher->is_used) {
-                return response()->json(['message' => 'Bạn đã sử dụng voucher này rồi'], 400);
-            }
-
-            $customerVoucher->is_used = 1;
-            $customerVoucher->save();
-        } else {
-            // Áp dụng voucher dùng chung
-            if ($voucher->used >= $voucher->usage_limit) {
-                return response()->json(['message' => 'Voucher đã hết lượt sử dụng'], 400);
-            }
-
-            $voucher->used += 1;
-            $voucher->usage_limit -= 1;
-            $voucher->save();
-        }
-
-        // Tính giá sau khi giảm
-        $discount = $voucher->discount_value;
-        $newTotal = max(0, $total - $discount);
-
-        return response()->json([
-            'message' => 'Áp dụng voucher thành công',
-            'discount' => $discount,
-            'new_total' => $newTotal,
-        ]);
+    if (!$voucher) {
+        return response()->json(['message' => 'Voucher không tồn tại hoặc đã hết hạn'], 404);
     }
+
+    // Kiểm tra điều kiện áp dụng
+    if ($voucher->required_total && $total < $voucher->required_total) {
+        return response()->json(['message' => 'Đơn hàng không đủ điều kiện để áp dụng voucher'], 400);
+    }
+
+    $customerVoucher = CustomerVoucher::where("customer_id", $customerId)
+        ->where("voucher_id", $voucher->id)
+        ->first();
+
+    if ($customerVoucher) {
+        // Áp dụng voucher cá nhân
+        if ($customerVoucher->is_used) {
+            return response()->json(['message' => 'Bạn đã sử dụng voucher này rồi'], 400);
+        }
+
+        $customerVoucher->is_used = 1;
+        $customerVoucher->save();
+    } else {
+        // Áp dụng voucher dùng chung
+        if ($voucher->used >= $voucher->usage_limit) {
+            return response()->json(['message' => 'Voucher đã hết lượt sử dụng'], 400);
+        }
+
+        $voucher->used += 1;
+        $voucher->usage_limit -= 1;
+        $voucher->save();
+    }
+
+    // Tính giá sau khi giảm
+    $discount = $voucher->discount_value;
+    $newTotal = max(0, $total - $discount);
+
+    return response()->json([
+        'message' => 'Áp dụng voucher thành công',
+        'discount' => $discount,
+        'new_total' => $newTotal,
+        'voucher' => [
+            'id' => $voucher->id,
+            'code' => $voucher->code
+        ]
+    ]);
+}
     public function store(Request $request)
     {
         $request->validate([

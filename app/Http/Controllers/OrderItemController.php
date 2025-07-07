@@ -39,19 +39,73 @@ class OrderItemController extends Controller
     // Cập nhật trạng thái của order item
     public function updateStatus(Request $request, $id)
     {
+        $user = $request->user();
+        if (!$user || $user->role !== 'chef') {
+            return response()->json(['message' => 'Bạn không có quyền cập nhật trạng thái món ăn'], 403);
+        }
+
         $orderItem = OrderItem::findOrFail($id);
 
         $validated = $request->validate([
             'status' => 'required|in:pending,preparing,served,done,cancelled'
         ]);
 
+        // Nếu chuyển sang cancelled và trạng thái cũ khác cancelled thì trừ tiền
+        $wasCancelled = $orderItem->status === 'cancelled';
         $orderItem->status = $validated['status'];
         $orderItem->save();
+
+        if (!$wasCancelled && $validated['status'] === 'cancelled') {
+            $this->decreaseOrderTotalByOrderItem($orderItem);
+        }
+
+        // Gọi hàm tự động cập nhật trạng thái order nếu cần
+        $this->autoUpdateOrderStatusIfDoneOrCancelled($orderItem->order_id);
 
         return response()->json([
             'message' => 'Cập nhật trạng thái thành công',
             'order_item' => $orderItem,
         ]);
+    }
+
+
+    protected function decreaseOrderTotalByOrderItem($orderItem)
+    {
+        $order = Order::find($orderItem->order_id);
+        if (!$order) return;
+
+        $amount = $orderItem->quantity * $orderItem->price;
+        $order->total_price = max(0, $order->total_price - $amount);
+        $order->save();
+    }
+
+
+    protected function autoUpdateOrderStatusIfDoneOrCancelled($orderId)
+    {
+        $order = Order::find($orderId);
+        if (!$order) return;
+
+        $allDoneOrCancelled = OrderItem::where('order_id', $orderId)
+            ->whereNotIn('status', ['done', 'cancelled'])
+            ->doesntExist();
+
+        if ($allDoneOrCancelled && $order->status !== 'success') {
+            $order->status = 'success';
+            $order->payment_method = 'cash';
+            $order->payment_status = 'done';
+            $order->save();
+            $this->autoCreatePaymentCodeIfDone($order);
+        }
+    }
+
+
+    protected function autoCreatePaymentCodeIfDone($order)
+    {
+        if ($order->payment_status === 'done' && empty($order->payment_code)) {
+            // Tạo mã thanh toán ngẫu nhiên, ví dụ: PAY + time + order id
+            $order->payment_code = 'PAY' . time() . $order->id;
+            $order->save();
+        }
     }
 
 
