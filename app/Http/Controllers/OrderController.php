@@ -85,33 +85,52 @@ class OrderController extends Controller
             'combos.*.quantity' => 'required_with:combos|integer|min:1',
             'combos.*.price' => 'required_with:combos|numeric',
         ]);
-
         $date = $request->reservation_date;
         $time = $request->reservation_time;
         $guestCount = $request->guest_count;
 
-        $availableTables = Table::whereDoesntHave('orderTables', function ($q) use ($date, $time) {
+        $availableTablesAsc = Table::whereDoesntHave('orderTables', function ($q) use ($date, $time) {
             $q->where('reservation_date', $date)
-                ->where('reservation_time', $time);
-        })->orderByDesc('max_guests')->get();
+            ->where('reservation_time', $time);
+        })->orderBy('max_guests')->get();
 
-        $selectedTables = [];
-        $remainingGuests = $guestCount;
+        $availableTablesDesc = $availableTablesAsc->sortByDesc('max_guests')->values();
 
-        foreach ($availableTables as $table) {
-            if ($remainingGuests <= 0) break;
-            $selectedTables[] = $table->id;
-            $remainingGuests -= $table->max_guests;
-        }
+        if ($guestCount <= 12) {
 
-        if ($remainingGuests > 0) {
-            $largestTable = $availableTables->first();
-            if (!$largestTable) {
-                return response()->json(['message' => 'Không còn bàn nào trống trong khung giờ này!'], 422);
+            $suitableTable = $availableTablesAsc->firstWhere('max_guests', '>=', $guestCount);
+            if (!$suitableTable) {
+                return response()->json(['message' => 'Không còn bàn nào phù hợp cho số lượng khách này!'], 422);
             }
-            $selectedTables = [$largestTable->id];
+
+            $selectedTables = [$suitableTable->id];
+            $remainingGuests = 0;
+        } else {
+
+            $selectedTables = [];
+            $remainingGuests = $guestCount;
+            $found = false;
+
+            for ($i = 0; $i < count($availableTablesDesc); $i++) {
+                for ($j = $i + 1; $j < count($availableTablesDesc); $j++) {
+                    $table1 = $availableTablesDesc[$i];
+                    $table2 = $availableTablesDesc[$j];
+                    if ($table1->max_guests + $table2->max_guests >= $guestCount) {
+                        $selectedTables = [$table1->id, $table2->id];
+                        $remainingGuests = 0;
+                        $found = true;
+                        break 2;
+                    }
+                }
+            }
+
+            if (!$found) {
+                return response()->json(['message' => 'Không đủ 2 bàn nào phù hợp để phục vụ số lượng khách này!'], 422);
+            }
         }
 
+
+        // Tạo đơn hàng
         $order = Order::create([
             'customer_id' => $request->customer_id,
             'payment_method' => $request->payment_method,
@@ -122,6 +141,7 @@ class OrderController extends Controller
             'payment_code' => strtoupper(uniqid('PAY')),
         ]);
 
+        // Gán bàn
         $orderTableIds = [];
         foreach ($selectedTables as $tableId) {
             $orderTableIds[] = DB::table('order_tables')->insertGetId([
@@ -135,6 +155,7 @@ class OrderController extends Controller
             ]);
         }
 
+        // Thêm món ăn
         foreach ($request->foods ?? [] as $food) {
             DB::table('order_items')->insert([
                 'order_id' => $order->id,
@@ -147,6 +168,7 @@ class OrderController extends Controller
             ]);
         }
 
+        // Thêm combo
         foreach ($request->combos ?? [] as $combo) {
             DB::table('order_items')->insert([
                 'order_id' => $order->id,
@@ -160,7 +182,7 @@ class OrderController extends Controller
         }
 
         return response()->json([
-            'message' => $remainingGuests > 0 ? 'Không đủ bàn, đã dồn tất cả khách vào 1 bàn lớn nhất còn trống!' : 'Đặt bàn thành công',
+            'message' => 'Đặt bàn thành công',
             'order_id' => $order->id,
             'ids_tables' => $orderTableIds,
             'selected_tables' => $selectedTables,
@@ -215,6 +237,7 @@ class OrderController extends Controller
         if (!$user || $user->role !== 'manager') {
             return response()->json(['message' => 'Bạn không có quyền cập nhật trạng thái món ăn'], 403);
         }
+
         $order = Order::findOrFail($id);
         $validated = $request->validate([
             'status' => 'required|in:pending,confirmed,success,cancelled'
@@ -264,6 +287,7 @@ class OrderController extends Controller
         if (!$order) {
             return response()->json(['message' => 'Order not found'], 404);
         }
+
         $order->status = 'cancelled';
         $order->save();
         return response()->json(['message' => 'Order cancelled successfully']);
