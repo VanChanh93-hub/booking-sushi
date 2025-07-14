@@ -89,7 +89,7 @@ class OrderController extends Controller
         $date = $request->reservation_date;
         $time = $request->reservation_time;
         $guestCount = $request->guest_count;
-
+        $voucher_id = $request->voucher_id;
         $availableTables = Table::whereDoesntHave('orderTables', function ($q) use ($date, $time) {
             $q->where('reservation_date', $date)
                 ->where('reservation_time', $time);
