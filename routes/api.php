@@ -39,7 +39,7 @@ Route::get('/orders', [OrderController::class, 'index']);              // Lấy 
 Route::get('/orders/{id}', [OrderController::class, 'show']);          // Lấy chi tiết đơn
 Route::put('/order/update-status/{id}', [OrderController::class, 'updateStatus']); // Cập nhật trạng thái
 Route::delete('/order/delete/{id}', [OrderController::class, 'destroy']);    // Xoá đơn đặt
-Route::patch('/orderitems/update-status/{id}', [OrderItemController::class, 'updateStatus']);
+Route::put('/orderitems/update-status/{id}', [OrderItemController::class, 'updateStatus']);
 Route::post('/orders/bookTables', [OrderController::class, 'bookTables']);
 Route::get('/statsDashbroad', [OrderController::class, 'statsDashbroad']);
 Route::get('/orders/history/{id}', [OrderController::class, 'orderHistory']);

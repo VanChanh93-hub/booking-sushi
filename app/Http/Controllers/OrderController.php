@@ -117,7 +117,7 @@ class OrderController extends Controller
             'payment_method' => $request->payment_method,
             'voucher_id' => $request->voucher_id,
             'total_price' => $request->total_price,
-            'status' => 'confirmed',
+            'status' => 'pending',
             'note' => $request->note,
             'payment_code' => strtoupper(uniqid('PAY')),
         ]);
@@ -211,6 +211,10 @@ class OrderController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
+        $user = $request->user();
+        if (!$user || $user->role !== 'manager') {
+            return response()->json(['message' => 'Bạn không có quyền cập nhật trạng thái món ăn'], 403);
+        }
         $order = Order::findOrFail($id);
         $validated = $request->validate([
             'status' => 'required|in:pending,confirmed,success,cancelled'
