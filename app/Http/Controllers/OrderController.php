@@ -131,6 +131,7 @@ class OrderController extends Controller
 
 
         // Tạo đơn hàng
+
         $order = Order::create([
             'customer_id' => $request->customer_id,
             'payment_method' => $request->payment_method,
@@ -140,6 +141,19 @@ class OrderController extends Controller
             'note' => $request->note,
             'payment_code' => strtoupper(uniqid('PAY')),
         ]);
+
+        // Nếu sử dụng voucher cá nhân => cập nhật is_used = 1
+        if ($request->voucher_id) {
+            $voucher = Voucher::find($request->voucher_id);
+            if ($voucher && $voucher->is_personal) {
+                DB::table('customer_vouchers')
+                    ->where('customer_id', $request->customer_id)
+                    ->where('voucher_id', $voucher->id)
+                    ->where('is_used', 0)
+                    ->limit(1)
+                    ->update(['is_used' => 1]);
+            }
+        }
 
         // Gán bàn
         $orderTableIds = [];

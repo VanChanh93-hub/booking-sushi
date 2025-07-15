@@ -37,7 +37,7 @@ Route::get('/tables/token/{token}', [TableController::class, 'getTableInfo']);
 // order
 Route::get('/orders', [OrderController::class, 'index']);              // Lấy danh sách đơn đặt
 Route::get('/orders/{id}', [OrderController::class, 'show']);          // Lấy chi tiết đơn
-Route::put('/order/update-status/{id}', [OrderController::class, 'updateStatus']); // Cập nhật trạng thái
+// Route::put('/order/update-status/{id}', [OrderController::class, 'updateStatus']); // Cập nhật trạng thái
 Route::delete('/order/delete/{id}', [OrderController::class, 'destroy']);    // Xoá đơn đặt
 Route::put('/orderitems/update-status/{id}', [OrderItemController::class, 'updateStatus']);
 Route::post('/orders/bookTables', [OrderController::class, 'bookTables']);
@@ -54,9 +54,7 @@ Route::get('/combos/{id}', [ComboController::class, 'show']); // Lấy chi tiế
 Route::post('/combo/insert-combos', [ComboController::class, 'store']); // Tạo mới combo
 Route::put('/combo/update-combo/{id}', [ComboController::class, 'update']); // Cập nhật combo
 Route::put('/combo/update-status/{id}', [ComboController::class, 'updateStatus']); // Cập nhật trạng thái combo
-Route::post('/combo/add-comboemp', [ComboController::class, 'createComboemp']); // Thêm món ăn vào combo
-Route::post('/combos/add-food-combo/{id}', [ComboController::class, 'addFoodCombo']);
-Route::delete('/combos/remove-food-combo/{combo_id}/{food_id}', [ComboController::class, 'destroyFoodId']);
+
 
 
 // food
@@ -100,16 +98,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [CustomerController::class, 'index']);
     Route::get('/logout', [CustomerController::class, 'destroy']);
     Route::put('/customers/{id}/role', [CustomerController::class, 'updateRole'])->name('customers.updateRole');
-});
+    Route::put('/order/update-status/{id}', [OrderController::class, 'updateStatus']);
 
 Route::get('admin/customers', [CustomerController::class, 'listAll']);
 Route::put('customers/{id}/status', [CustomerController::class, 'lockUnlock']);
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink']);
 Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 
-
-
-
+});
 
 // google auth
 
@@ -131,9 +127,6 @@ Route::delete('/voucher/{id}', [VoucherController::class, 'destroy']); // xoá
 Route::post('/applyVoucher', [CustomerVoucherController::class, 'applyVoucher']);
 Route::post('/themVoucherWheel', [CustomerVoucherController::class, 'store']);
 Route::get('/getAllVoucherByUser/{id}', [CustomerVoucherController::class, 'index']);
-
-
-
 Route::post('/table/info/{token}', [OrderTableController::class, 'getTableInfo']); // kiểm tra bàn
 Route::post('/orderItem/add', [OrderItemController::class, 'addItem']);
 
