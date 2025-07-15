@@ -16,10 +16,10 @@ return new class extends Migration
             $table->foreignId('customer_id')->constrained('customers')->cascadeOnDelete();
             $table->foreignId('order_id')->constrained('order_items')->cascadeOnDelete();
             $table->integer('rating')->check('rating >= 1 AND rating <= 5');
+            $table->text('admin-reply')->nullable();
             $table->text('comment')->nullable();
-            $table->text('title')->nullable();
-            $table->text('content')->nullable();
             $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->nullable(); // Thêm dòng này
         });
     }
 

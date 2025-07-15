@@ -123,7 +123,6 @@ class OrderController extends Controller
                     }
                 }
             }
-
             if (!$found) {
                 return response()->json(['message' => 'Không đủ 2 bàn nào phù hợp để phục vụ số lượng khách này!'], 422);
             }

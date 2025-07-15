@@ -17,9 +17,9 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\ComboController;
 use App\Http\Controllers\FoodgroupController;
 use App\Http\Controllers\VNPayController;
-use App\Http\Controllers\MoMoController;
 use App\Http\Controllers\RecommendationController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\FeedbackController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -139,3 +139,12 @@ Route::get('/getItemsByOrderId/{id}', [OrderItemController::class, 'getItemsByOr
 //ai
 Route::get('/recommendations/{customerId}', [RecommendationController::class, 'tasteProfile']);
 Route::post('/chat', [ChatController::class, 'chat']);
+
+
+
+// feedback
+Route::get('/feedbacks', [FeedbackController::class, 'index']);
+Route::post('/feedbacks', [FeedbackController::class, 'store']);
+Route::get('/feedbacks/order/{orderId}', [FeedbackController::class, 'getFeedbackByOrderId']);
+Route::get('/feedbacks/customer/{customerId}', [FeedbackController::class, 'getFeedbackByCustomerId']);
+Route::put('/feedbacks/reply/{feedbackId}', [FeedbackController::class, 'adminReply']);
