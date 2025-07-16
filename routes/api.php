@@ -144,5 +144,5 @@ Route::get('/vnpay-return', [VNPayController::class, 'vnpayReturn'])->name('vnpa
 Route::get('/getItemsByOrderId/{id}', [OrderItemController::class, 'getItemsByOrderId']);
 
 //ai
-Route::get('/recommendations/{customerId}', [RecommendationController::class, 'tasteProfile']);
+Route::get('/recommendations/{customerId}', [RecommendationController::class, 'get']);
 Route::post('/chat', [ChatController::class, 'chat']);
