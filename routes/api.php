@@ -44,7 +44,7 @@ Route::post('/orders/bookTables', [OrderController::class, 'bookTables']);
 Route::get('/statsDashbroad', [OrderController::class, 'statsDashbroad']);
 Route::get('/orders/history/{id}', [OrderController::class, 'orderHistory']);
 Route::post('/orders/cancel/{id}', [OrderController::class, 'cancelOrder']);
-
+ Route::put('/orderitems/update-status/{id}', [OrderItemController::class, 'updateStatus']);
 
 
 
@@ -70,7 +70,7 @@ Route::put('/food/update-status/{id}', [FoodController::class, 'updateStatus']);
 Route::get('/foodgroups', [\App\Http\Controllers\FoodgroupController::class, 'index']);
 Route::post('/foodgroup/insert-foodgroup', [\App\Http\Controllers\FoodgroupController::class, 'store']);
 Route::put('/foodgroup/update-foodgroup/{id}', [\App\Http\Controllers\FoodgroupController::class, 'update']);
-
+route::put('/foodgroup/update-status/{id}', [\App\Http\Controllers\FoodgroupController::class, 'updateStatus']);
 
 
 
