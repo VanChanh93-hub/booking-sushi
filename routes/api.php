@@ -74,7 +74,6 @@ route::put('/foodgroup/update-status/{id}', [\App\Http\Controllers\FoodgroupCont
 
 
 
-
 // category
 Route::get('/category', [CategoryController::class, 'index']);
 Route::post('insert-category', [CategoryController::class, 'store']);

@@ -9,6 +9,7 @@ class Combo extends Model
 
     protected $fillable = [
         'name',
+        'name_en',
         'price',
         'image',
         'description',

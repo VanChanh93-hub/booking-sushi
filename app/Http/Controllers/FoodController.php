@@ -9,23 +9,37 @@ use Illuminate\Support\Facades\Storage;
 
 class FoodController extends Controller
 {
-    // Lấy danh sách Food theo category và foodgroup nếu có
     public function index(Request $request)
     {
+        $lang = $request->get('lang', 'vi');
         $foods = Food::with(['category', 'group'])->get();
-        $query = Food::get();
 
-        return response()->json([
-            'data' => $query
-        ]);
+        $localized = $foods->map(function ($food) use ($lang) {
+            return [
+                'id' => $food->id,
+                'category_id' => $food->category_id,
+                'group_id' => $food->group_id,
+                'name' => $lang === 'en' ? ($food->name_en ?? $food->name) : $food->name,
+                'jpName' => $food->jpName,
+                'description' => $lang === 'en' ? ($food->description_en ?? $food->description) : $food->description,
+                'price' => $food->price,
+                'status' => $food->status,
+                'image' => $food->image ? asset('storage/' . $food->image) : null,
+                'category' => $food->category,
+                'group' => $food->group,
+            ];
+        });
+
+        return response()->json(['data' => $localized]);
     }
 
-    public function getFoodsByCategory($categoryId)
+    public function getFoodsByCategory(Request $request, $categoryId)
     {
+        $lang = $request->get('lang', 'vi');
         $foods = Food::where('category_id', $categoryId)
-            ->where('status', true)
-            ->with('category')
-            ->get();
+                    ->where('status', true)
+                    ->with(['category', 'group'])
+                    ->get();
 
         if ($foods->isEmpty()) {
             return response()->json([
@@ -34,49 +48,41 @@ class FoodController extends Controller
             ], 404);
         }
 
-        return response()->json([
-            'data' => $foods
-        ]);
+        $localized = $foods->map(function ($food) use ($lang) {
+            return [
+                'id' => $food->id,
+                'name' => $lang === 'en' ? ($food->name_en ?? $food->name) : $food->name,
+                'jpName' => $food->jpName,
+                'description' => $lang === 'en' ? ($food->description_en ?? $food->description) : $food->description,
+                'price' => $food->price,
+                'status' => $food->status,
+                'image' => $food->image ? asset('storage/' . $food->image) : null,
+                'category' => $food->category,
+                'group' => $food->group,
+            ];
+        });
+
+        return response()->json(['data' => $localized]);
     }
 
-    // public function getFoodsByCategory($categoryId)
-    // {
-    //     $foods = Food::where('category_id', $categoryId)
-    //         ->where('status', true)
-    //         ->with('category')
-    //         ->get();
-    //                 ->where('status', true)
-    //                 ->with(['category', 'group'])
-    //                 ->get();
-
-    //     if ($foods->isEmpty()) {
-    //         return response()->json([
-    //             'status' => 'error',
-    //             'message' => 'Không tìm thấy món ăn trong danh mục này'
-    //         ], 404);
-    //     }
-
-    //     return response()->json([
-    //         'data' => $foods
-    //     ]);
-    // }
-
-    // Tạo món mới
     public function store(Request $request)
     {
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'group_id' => 'nullable|exists:food_groups,id',
             'name' => 'required|string|max:255',
+            'name_en' => 'nullable|string|max:255',
             'jpName' => 'nullable|string|max:255',
             'description' => 'nullable|string',
+            'description_en' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-        ]);
+            ]);
 
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('foods', 'public');
         }
+
         $food = Food::create($validated);
 
         return response()->json([
@@ -85,23 +91,31 @@ class FoodController extends Controller
         ], 201);
     }
 
-    // Lấy chi tiết món
-    public function show($id)
+    public function show(Request $request, $id)
     {
+        $lang = $request->get('lang', 'vi');
         $food = Food::with(['category', 'group'])->find($id);
 
         if (!$food) {
             return response()->json(['message' => 'Food not found.'], 404);
         }
 
-        return response()->json($food);
+        return response()->json([
+            'id' => $food->id,
+            'name' => $lang === 'en' ? ($food->name_en ?? $food->name) : $food->name,
+            'jpName' => $food->jpName,
+            'description' => $lang === 'en' ? ($food->description_en ?? $food->description) : $food->description,
+            'price' => $food->price,
+            'status' => $food->status,
+            'image' => $food->image ? asset('storage/' . $food->image) : null,
+            'category' => $food->category,
+            'group' => $food->group,
+        ]);
     }
 
-    // Sửa món ăn
     public function update(Request $request, $id)
     {
         $food = Food::find($id);
-
         if (!$food) {
             return response()->json(['message' => 'Food not found.'], 404);
         }
@@ -110,11 +124,14 @@ class FoodController extends Controller
             'category_id' => 'sometimes|exists:categories,id',
             'group_id' => 'nullable|exists:food_groups,id',
             'name' => 'sometimes|string|max:255',
+            'name_en' => 'nullable|string|max:255',
             'jpName' => 'nullable|string|max:255',
             'description' => 'nullable|string',
+            'description_en' => 'nullable|string',
             'price' => 'sometimes|numeric|min:0',
             'status' => 'sometimes|boolean',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'season' => 'sometimes|in:spring,summer,autumn,winter',
         ]);
 
         if ($request->hasFile('image')) {
@@ -132,53 +149,9 @@ class FoodController extends Controller
         ]);
     }
 
-    // Xoá món ăn
-
-    // Lấy danh sách FoodGroup theo category
-    public function getFoodGroupsByCategory($categoryId)
-    {
-        $groups = FoodGroup::where('category_id', $categoryId)->get();
-
-        return response()->json([
-            'data' => $groups
-        ]);
-    }
-    // Lấy danh sách món ăn theo category, nếu có foodgroup thì trả về theo group, nếu không thì trả về theo category
-    public function foodsByCategoryWithGroups($categoryId)
-    {
-        $groups = FoodGroup::where('category_id', $categoryId)->get();
-
-        if ($groups->count() > 0) {
-            $result = $groups->map(function ($group) {
-                return [
-                    'group_id' => $group->id,
-                    'group_name' => $group->name,
-                    'foods' => $group->food()
-                        ->where('status', true)
-                        ->with('category')
-                        ->get(),
-                ];
-            });
-            return response()->json([
-                'type' => 'group',
-                'data' => $result
-            ]);
-        } else {
-            // Không có foodgroup, trả về danh sách món ăn theo category
-            $foods = Food::where('category_id', $categoryId)
-                ->where('status', true)
-                ->with('category')
-                ->get();
-            return response()->json([
-                'type' => 'category',
-                'data' => $foods
-            ]);
-        }
-    }
     public function updateStatus(Request $request, $id)
     {
         $food = Food::find($id);
-
         if (!$food) {
             return response()->json(['message' => 'Food not found.'], 404);
         }
@@ -194,5 +167,71 @@ class FoodController extends Controller
             'message' => 'Food status updated successfully.',
             'data' => $food->load(['category', 'group'])
         ]);
+    }
+
+    public function getFoodGroupsByCategory($categoryId)
+    {
+        $groups = FoodGroup::where('category_id', $categoryId)->get();
+        return response()->json(['data' => $groups]);
+    }
+
+    public function foodsByCategoryWithGroups(Request $request, $categoryId)
+    {
+        $lang = $request->get('lang', 'vi');
+        $groups = FoodGroup::where('category_id', $categoryId)->get();
+
+        if ($groups->count() > 0) {
+            $result = $groups->map(function ($group) use ($lang) {
+                $foods = $group->food()
+                    ->where('status', true)
+                    ->with('category')
+                    ->get()
+                    ->map(function ($food) use ($lang) {
+                        return [
+                            'id' => $food->id,
+                            'name' => $lang === 'en' ? ($food->name_en ?? $food->name) : $food->name,
+                            'jpName' => $food->jpName,
+                            'description' => $lang === 'en' ? ($food->description_en ?? $food->description) : $food->description,
+                            'price' => $food->price,
+                            'status' => $food->status,
+                            'image' => $food->image ? asset('storage/' . $food->image) : null,
+                            'category' => $food->category,
+                        ];
+                    });
+
+                return [
+                    'group_id' => $group->id,
+                    'group_name' => $group->name,
+                    'foods' => $foods,
+                ];
+            });
+
+            return response()->json([
+                'type' => 'group',
+                'data' => $result
+            ]);
+        } else {
+            $foods = Food::where('category_id', $categoryId)
+                ->where('status', true)
+                ->with('category')
+                ->get()
+                ->map(function ($food) use ($lang) {
+                    return [
+                        'id' => $food->id,
+                        'name' => $lang === 'en' ? ($food->name_en ?? $food->name) : $food->name,
+                        'jpName' => $food->jpName,
+                        'description' => $lang === 'en' ? ($food->description_en ?? $food->description) : $food->description,
+                        'price' => $food->price,
+                        'status' => $food->status,
+                        'image' => $food->image ? asset('storage/' . $food->image) : null,
+                        'category' => $food->category,
+                    ];
+                });
+
+            return response()->json([
+                'type' => 'category',
+                'data' => $foods
+            ]);
+        }
     }
 }
