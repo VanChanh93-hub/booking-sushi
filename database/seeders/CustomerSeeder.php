@@ -9,48 +9,42 @@ use Illuminate\Support\Carbon;
 
 class CustomerSeeder extends Seeder
 {
-    public function run()
-    {
-        // Disable foreign key checks
-        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+public function run()
+{
+    // Xóa dữ liệu thay vì truncate để tránh lỗi khóa ngoại
+    DB::table('customers')->delete();
 
-        // Truncate the table
-        DB::table('customers')->truncate();
-
-        // Enable foreign key checks
-        DB::statement('SET FOREIGN_KEY_CHECKS=1');
-
-        DB::table('customers')->insert([
-            [
-                'name' => 'John Smith',
-                'email' => 'john@example.com',
-                'phone' => '1234567890',
-                'point' => 150,
-                'password' => Hash::make('password'),
-                'membership_level' => 'gold',
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            [
-                'name' => 'Alice Brown',
-                'email' => 'alice@example.com',
-                'phone' => '9876543210',
-                'point' => 75,
-                'password' => Hash::make('password'),
-                'membership_level' => 'silver',
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            [
-                'name' => 'Bob White',
-                'email' => 'bob@example.com',
-                'phone' => '5647382910',
-                'point' => 200,
-                'password' => Hash::make('password'),
-                'membership_level' => 'platinum',
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-        ]);
-    }
+    DB::table('customers')->insert([
+        [
+            'name' => 'John Smith',
+            'email' => 'john@example.com',
+            'phone' => '1234567890',
+            'point' => 150,
+            'password' => Hash::make('password'),
+            'membership_level' => 'gold',
+            'created_at' => now(),
+            'updated_at' => now()
+        ],
+        [
+            'name' => 'Alice Brown',
+            'email' => 'alice@example.com',
+            'phone' => '9876543210',
+            'point' => 75,
+            'password' => Hash::make('password'),
+            'membership_level' => 'silver',
+            'created_at' => now(),
+            'updated_at' => now()
+        ],
+        [
+            'name' => 'Bob White',
+            'email' => 'bob@example.com',
+            'phone' => '5647382910',
+            'point' => 200,
+            'password' => Hash::make('password'),
+            'membership_level' => 'platinum',
+            'created_at' => now(),
+            'updated_at' => now()
+        ],
+    ]);
+}
 }

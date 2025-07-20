@@ -47,4 +47,8 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class, 'order_id');
     }
+    public function orderTables()
+    {
+        return $this->hasMany(\App\Models\OrderTable::class, 'order_id');
+    }
 }

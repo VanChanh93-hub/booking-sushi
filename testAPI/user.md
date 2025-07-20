@@ -130,3 +130,21 @@ http://127.0.0.1:8000/api/getAllVoucherByUser/{id} get
 
 lấy all voucher dành cho khách hàng
 http://127.0.0.1:8000/api/voucherForCustomer get
+
+
+==================
+Feedback
+
+http://localhost:8000/api/feedbacks  GET lấy ra tất cả feedback
+
+
+http://localhost:8000/api/feedbacks POST feedback khi đơn hàng thành công
+
+{
+    "customer_id": 1,
+    "order_id": 1,
+    "rating": 5,
+    "comment": "Đồ ăn ngon, giao nhanh",
+}
+note phải chỉnh status của orders thành  success
+

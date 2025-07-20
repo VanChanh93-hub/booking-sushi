@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Http\Controllers;
 
 use App\Models\Category;
@@ -8,17 +7,30 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Category::all());
+        $lang = $request->query('lang', 'vi');
+
+        $categories = Category::all()->map(function ($category) use ($lang) {
+            return [
+                'id' => $category->id,
+                'name' => $lang === 'en' ? $category->name_en ?? $category->name : $category->name,
+                'description' => $category->description,
+                'icon' => $category->icon ?? null,
+                'status' => $category->status,
+            ];
+        });
+
+        return response()->json($categories);
     }
 
-    // Create a new category
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:categories,name',
+            'name_en' => 'nullable|string|max:255|unique:categories,name_en',
             'description' => 'nullable|string',
+            'icon' => 'nullable|string',
         ]);
 
         $category = Category::create($validated);
@@ -29,17 +41,26 @@ class CategoryController extends Controller
         ], 201);
     }
 
-    // Show single category
-    public function show($id)
+    public function show($id, Request $request)
     {
         $category = Category::find($id);
+        $lang = $request->query('lang', 'vi');
 
         if (!$category) {
             return response()->json(['message' => 'Category not found.'], 404);
         }
 
-        return response()->json($category);
+        $translatedCategory = [
+            'id' => $category->id,
+            'name' => $lang === 'en' ? $category->name_en ?? $category->name : $category->name,
+            'description' => $category->description,
+            'icon' => $category->icon ?? null,
+            'status' => $category->status,
+        ];
+
+        return response()->json($translatedCategory);
     }
+
     public function updateStatus(Request $request, $id)
     {
         $category = Category::find($id);
@@ -61,7 +82,6 @@ class CategoryController extends Controller
         ]);
     }
 
-
     public function update(Request $request, $id)
     {
         $category = Category::find($id);
@@ -72,9 +92,10 @@ class CategoryController extends Controller
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255|unique:categories,name,' . $id,
+            'name_en' => 'nullable|string|max:255|unique:categories,name_en,' . $id,
             'description' => 'nullable|string',
+            'icon' => 'nullable|string',
         ]);
-
         $category->update($validated);
 
         return response()->json([

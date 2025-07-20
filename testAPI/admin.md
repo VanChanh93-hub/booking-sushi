@@ -187,3 +187,28 @@ thêm food_id vào combo
 
 
 
+
+
+
+===============
+feedback
+
+http://127.0.0.1:8000/api/feedbacks/order/{orderId} GET lấy ra danh sách feedback theo order
+
+===============
+http://127.0.0.1:8000/api/feedbacks/customer/{customerId} GET lấy ra danh sách feedback theo khách hàng
+
+===============
+http://127.0.0.1:8000/api/feedbacks GET lấy ra tất cả danh sách feedback
+
+
+
+===============
+
+http://127.0.0.1:8000/api/feedbacks/reply/{feedbackId} PUT admin trả lời lại feedback của khách hàng
+
+{
+    "admin_reply": "Cảm ơn bạn đã phản hồi, hẹn gặp lại bạn lần sau!"
+}
+
+

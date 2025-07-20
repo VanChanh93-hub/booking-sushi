@@ -49,5 +49,17 @@ class FoodgroupController extends Controller
         $group->update($validated);
         return response()->json($group);
     }
+    public function updateStatus(Request $request, $id)
+    {
+        $group = FoodGroup::find($id);
+        if (!$group) {
+            return response()->json(['message' => 'Không tìm thấy nhóm món ăn'], 404);
+        }
+        $validated = $request->validate([
+            'status' => 'required|boolean',
+        ]);
+        $group->update($validated);
+        return response()->json($group);
+    }
 
 }
