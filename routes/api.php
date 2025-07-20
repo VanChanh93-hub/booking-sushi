@@ -136,10 +136,7 @@ Route::get('/vnpay-return', [VNPayController::class, 'vnpayReturn'])->name('vnpa
 Route::get('/getItemsByOrderId/{id}', [OrderItemController::class, 'getItemsByOrderId']);
 
 //ai
-<<<<<<< HEAD
-Route::get('/recommendations/{customerId}', [RecommendationController::class, 'get']);
-Route::post('/chat', [ChatController::class, 'chat']);
-=======
+
 Route::get('/recommendations/{customerId}', [RecommendationController::class, 'tasteProfile']);
 Route::post('/chat', [ChatController::class, 'chat']);
 
@@ -151,4 +148,3 @@ Route::post('/feedbacks', [FeedbackController::class, 'store']);
 Route::get('/feedbacks/order/{orderId}', [FeedbackController::class, 'getFeedbackByOrderId']);
 Route::get('/feedbacks/customer/{customerId}', [FeedbackController::class, 'getFeedbackByCustomerId']);
 Route::put('/feedbacks/reply/{feedbackId}', [FeedbackController::class, 'adminReply']);
->>>>>>> chanh
