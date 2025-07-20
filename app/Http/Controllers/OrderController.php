@@ -27,17 +27,18 @@ class OrderController extends Controller
             })->orWhere('status', 'like', "%$keyword%");
         }
 
-        $orders = $query->with('customer', 'tables')->latest()->get();
+        $orders = $query->with(['customer', 'tables'])->latest()->get();
 
+        $orders = $orders->map(function ($order) {
+            $orderTableRows = OrderTable::where('order_id', $order->id)->get();
+            $reservationDates = $orderTableRows->pluck('reservation_date')->unique()->values();
+            $reservationTimes = $orderTableRows->pluck('reservation_time')->unique()->values();
+            $orderArray = $order->toArray();
+            $orderArray['reservation_dates'] = $reservationDates;
+            $orderArray['reservation_times'] = $reservationTimes;
+            return $orderArray;
+        });
         return response()->json($orders);
-    }
-
-    public function destroy($id)
-    {
-        $order = Order::findOrFail($id);
-        $order->delete();
-
-        return response()->json(['message' => 'Order deleted']);
     }
 
     public function show($id)
