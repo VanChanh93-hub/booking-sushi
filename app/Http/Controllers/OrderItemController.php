@@ -40,7 +40,7 @@ class OrderItemController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $user = $request->user();
-        if (!$user || $user->role !== 'chef') {
+        if (!$user || $user->role !== 'staff') {
             return response()->json(['message' => 'Bạn không có quyền cập nhật trạng thái món ăn'], 403);
         }
 

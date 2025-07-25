@@ -13,6 +13,7 @@ class Combo extends Model
         'price',
         'image',
         'description',
+        'description_en',
         'status',
     ];
     public function comboitems()

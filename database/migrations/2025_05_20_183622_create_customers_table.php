@@ -20,7 +20,7 @@ return new class extends Migration
             $table->integer('point_available')->default(0);
             $table->string('password', 255);
             $table->string('membership_level', 50)->nullable();
-            $table->enum('role', ['user', 'admin', 'manager','chef'])->default('user');
+            $table->enum('role', ['user', 'admin', 'manager','staff'])->default('user');
             $table->boolean('status')->default(true);
             $table->timestamps();
         });

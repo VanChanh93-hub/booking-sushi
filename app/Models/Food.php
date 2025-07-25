@@ -15,6 +15,7 @@ class Food extends Model
         'name_en',
         'jpName',
         'description',
+        'description_en',
         'price',
         'status',
         'image',

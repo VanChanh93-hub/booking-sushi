@@ -38,7 +38,7 @@ class ComboController extends Controller
                         'price' => $food->price,
                     ],
                 ];
-            })->filter(), // loại bỏ null nếu có
+            })->filter(),
         ];
     });
 

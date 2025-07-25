@@ -120,7 +120,7 @@ class CustomerController extends Controller
         }
 
         $request->validate([
-            'role' => 'required|in:user,admin,manager,chef',
+            'role' => 'required|in:user,admin,manager,staff',
         ]);
 
         $customer = Customers::findOrFail($id);

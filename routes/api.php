@@ -129,6 +129,13 @@ Route::get('/getAllVoucherByUser/{id}', [CustomerVoucherController::class, 'inde
 Route::post('/table/info/{token}', [OrderTableController::class, 'getTableInfo']); // kiểm tra bàn
 Route::post('/orderItem/add', [OrderItemController::class, 'addItem']);
 
+// order table
+Route::get('/orderTable/{id}', [OrderTableController::class, 'show']);
+Route::put('/orderTable/update/{order_table_id}', [OrderTableController::class, 'staffUpdateOrderTable']);
+Route::post('/orderTable/add', [OrderTableController::class, 'staffAddTable_id']);
+
+
+
 
 Route::post('/orders/vnpay-url', [VNPayController::class, 'createurlvnpay']);
 Route::get('/vnpay-return', [VNPayController::class, 'vnpayReturn'])->name('vnpay.callback');

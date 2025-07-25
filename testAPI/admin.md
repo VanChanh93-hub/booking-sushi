@@ -212,3 +212,29 @@ http://127.0.0.1:8000/api/feedbacks/reply/{feedbackId} PUT admin trả lời l�
 }
 
 
+
+
+
+==========================
+
+http://127.0.0.1:8000/api/orderTable/{order_id}  GET
+lấy ra danh sách ordertable dựa vào order_id
+
+
+=======================
+http://127.0.0.1:8000/api/orderTable/update/{order_table_id} PUT
+
+chỉnh sửa table_id dựa vào order_id 
+{
+    "table_id": 2
+}
+=======================
+http://127.0.0.1:8000/api/orderTable/add POST
+ thêm ordertables vào order_id
+
+{
+    "order_id": 1,
+    "table_id": 3,
+    "reservation_date": "2024-06-10",
+    "reservation_time": "18:00:00"
+}
