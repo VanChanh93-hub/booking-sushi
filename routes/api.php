@@ -141,8 +141,10 @@ Route::post('/orders/vnpay-url', [VNPayController::class, 'createurlvnpay']);
 Route::get('/vnpay-return', [VNPayController::class, 'vnpayReturn'])->name('vnpay.callback');
 
 Route::get('/getItemsByOrderId/{id}', [OrderItemController::class, 'getItemsByOrderId']);
+Route::get('/getOrderChef', [OrderItemController::class, 'GetOrderItemsForChef']);
+Route::get('/getOrderStaff', [OrderItemController::class, 'GetOrderItemsForStaff']);
 
-//ai
+//aiupdateItem
 
 Route::get('/recommendations/{customerId}', [RecommendationController::class, 'tasteProfile']);
 Route::post('/chat', [ChatController::class, 'chat']);

@@ -72,7 +72,6 @@ http://127.0.0.1:8000/api/order/update-status/{id} PUT
 cập nhập trạng thái chi tiết đơn hàng
 http://127.0.0.1:8000/api/orderitems/update-status/{id} PUT
 
-
 {
    "status":"success"
 }
@@ -237,4 +236,24 @@ http://127.0.0.1:8000/api/orderTable/add POST
     "table_id": 3,
     "reservation_date": "2024-06-10",
     "reservation_time": "18:00:00"
+}
+=====================
+http://127.0.0.1:8000/api/getOrderChef GET
+lấy order_item cho chef
+
+
+=====================
+http://127.0.0.1:8000/api/getOrderStaff GET
+lấy order_item cho chef
+
+
+=====================
+http://127.0.0.1:8000/api/orderItem/add POST
+Nhân viên thêm order_item dựa vào id
+{
+    "order_id" : 4,
+    "food_id":1,
+    "combo_id":2,
+    "quantity": 4,
+    "price":4
 }

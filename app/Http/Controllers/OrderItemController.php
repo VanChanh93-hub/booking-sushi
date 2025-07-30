@@ -11,6 +11,10 @@ class OrderItemController extends Controller
 {
     public function addItem(Request $request)
     {
+         $user = $request->user();
+        if (!$user || $user->role !== 'staff') {
+            return response()->json(['message' => 'Bạn không có quyền cập nhật trạng thái món ăn'], 403);
+        }
         $validated = $request->validate([
             'order_id' => 'required|exists:tables,id',
             'food_id' => 'nullable|integer|exists:foods,id',
@@ -19,7 +23,7 @@ class OrderItemController extends Controller
             'price' => 'required|numeric|min:0',
         ]);
         $order = Order::where('id', $validated['order_id'])
-            ->whereIn('status', ['pending', 'serve'])
+            ->whereIn('status', ['pending','preparing', 'serve'])
             ->latest()
             ->first();;
         if (!$order) {
@@ -40,7 +44,7 @@ class OrderItemController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $user = $request->user();
-        if (!$user || $user->role !== 'staff') {
+        if (!$user || $user->role !== 'staff'|| $user->role !== 'chef') {
             return response()->json(['message' => 'Bạn không có quyền cập nhật trạng thái món ăn'], 403);
         }
 
@@ -111,7 +115,6 @@ class OrderItemController extends Controller
 
     public function getItemsByOrderId($orderId)
     {
-
         $order = Order::find($orderId);
         if (!$order) {
             return response()->json(['message' => 'Đơn hàng không tồn tại'], 404);
@@ -153,31 +156,7 @@ class OrderItemController extends Controller
         return response()->json(['message' => 'Đã xóa món ăn khỏi đơn hàng'], 200);
     }
 
-    public function updateItem(Request $request, $id)
-    {
-        $orderItem = OrderItem::find($id);
-        if (!$orderItem) {
-            return response()->json(['message' => 'Món ăn không tồn tại'], 404);
-        }
 
-        $validated = $request->validate([
-            'food_id' => 'nullable|integer|exists:foods,id',
-            'combo_id' => 'nullable|integer|exists:combos,id',
-            'quantity' => 'required|integer|min:1',
-            'price' => 'required|numeric|min:0',
-        ]);
-
-        $order = Order::find($orderItem->order_id);
-        if (!$order || !in_array($order->status, ['pending', 'serve'])) {
-            return response()->json(['message' => 'Không thể cập nhật món ăn từ đơn hàng đã hoàn thành hoặc hủy'], 400);
-        }
-
-        $orderItem->update($validated);
-        return response()->json([
-            'message' => 'Cập nhật món ăn thành công',
-            'order_item' => $orderItem,
-        ], 200);
-    }
     public function bestSellers(Request $request)
     {
         $top = $request->input('top', 5);
@@ -213,4 +192,49 @@ class OrderItemController extends Controller
             'data' => $result
         ]);
     }
+
+    public function GetOrderItemsForChef(Request $request)
+    {
+        $user = $request->user();
+        if (!$user || $user->role !== 'chef') {
+            return response()->json(['message' => 'Bạn không có quyền truy cập vào danh sách món ăn'], 403);
+        }
+        $items = OrderItem::join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->join('order_tables', 'orders.id', '=', 'order_tables.order_id')
+            ->whereIn('order_items.status', ['pending', 'preparing'])
+            ->orderBy('order_tables.reservation_time', 'asc')
+            ->select('order_items.*')
+            ->get();
+        return response()->json([
+            'message' => 'Danh sách món ăn đang chuẩn bị',
+            'data' => $items
+        ]);
+    }
+
+    public function GetOrderItemsForStaff(Request $request)
+    {
+        $user = $request->user();
+        if (!$user || $user->role !== 'staff') {
+            return response()->json(['message' => 'Bạn không có quyền truy cập vào danh sách món ăn'], 403);
+        }
+
+        $items = OrderItem::join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->join('order_tables', 'orders.id', '=', 'order_tables.order_id')
+            ->join('tables', 'order_tables.table_id', '=', 'tables.id')
+            ->whereIn('order_items.status', ['served', 'done', 'cancelled'])
+            ->orderBy('order_tables.reservation_time', 'asc')
+            ->select(
+                'order_items.*',
+                'tables.table_number',
+                'order_tables.reservation_date',
+                'order_tables.reservation_time'
+            )
+            ->get();
+
+        return response()->json([
+            'message' => 'Danh sách món đã phục vụ, hoàn thành hoặc huỷ',
+            'data' => $items
+        ]);
+    }
 }
+
