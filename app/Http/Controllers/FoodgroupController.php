@@ -20,6 +20,7 @@ class FoodgroupController extends Controller
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
+            'name_en' => 'nullable|string|max:255',
         ]);
         $group = FoodGroup::create($validated);
         return response()->json($group, 201);
@@ -45,6 +46,7 @@ class FoodgroupController extends Controller
         $validated = $request->validate([
             'category_id' => 'sometimes|exists:categories,id',
             'name' => 'sometimes|string|max:255',
+            'name_en' => 'nullable|string|max:255',
         ]);
         $group->update($validated);
         return response()->json($group);

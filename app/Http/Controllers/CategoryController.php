@@ -15,6 +15,7 @@ class CategoryController extends Controller
             return [
                 'id' => $category->id,
                 'name' => $lang === 'en' ? $category->name_en ?? $category->name : $category->name,
+                'name_en' => $category->name_en,
                 'description' => $category->description,
                 'icon' => $category->icon ?? null,
                 'status' => $category->status,
@@ -54,6 +55,7 @@ class CategoryController extends Controller
             'id' => $category->id,
             'name' => $lang === 'en' ? $category->name_en ?? $category->name : $category->name,
             'description' => $category->description,
+            'name_en' => $category->name_en,
             'icon' => $category->icon ?? null,
             'status' => $category->status,
         ];

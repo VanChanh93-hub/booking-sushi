@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('category_id'); // Liên kết với bảng `categories`
             $table->string('name'); // Tên nhóm món ăn
+            $table->string('name_en')->nullable();
             $table->boolean('status')->default(true); // Trạng thái hoạt động của nhóm món ăn
             $table->timestamps();
             $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');

@@ -11,7 +11,7 @@ class OrderItemController extends Controller
 {
     public function addItem(Request $request)
     {
-         $user = $request->user();
+        $user = $request->user();
         if (!$user || $user->role !== 'staff') {
             return response()->json(['message' => 'Bạn không có quyền cập nhật trạng thái món ăn'], 403);
         }
@@ -25,17 +25,25 @@ class OrderItemController extends Controller
         $order = Order::where('id', $validated['order_id'])
             ->whereIn('status', ['pending','preparing', 'serve'])
             ->latest()
-            ->first();;
+            ->first();
         if (!$order) {
             return response()->json(['message' => 'Không tìm thấy đơn hàng đang phục vụ cho bàn này.'], 404);
         }
         $validated['order_id'] = $order->id;
 
         $orderItem = OrderItem::create($validated);
+
+        // Bổ sung: tăng tổng tiền của order
+        $order->total_price += $orderItem->quantity * $orderItem->price;
+        $order->save();
+
         $food = Food::find($validated['food_id']);
         return response()->json([
             'message' => 'Thêm món thành công',
             'tên món ăn' => $food->name,
+            'combo_id' => $validated['combo_id'] ?? "không có",
+            'số lượng' => $validated['quantity'],
+            'price' => $orderItem->price,
             'order_item' => $orderItem,
         ], 201);
     }
@@ -70,6 +78,33 @@ class OrderItemController extends Controller
             'message' => 'Cập nhật trạng thái thành công',
             'order_item' => $orderItem,
         ]);
+    }
+ public function removeItem(Request $request, $id)
+    {
+           $user = $request->user();
+        if (!$user || $user->role !== 'staff') {
+            return response()->json(['message' => 'Bạn không có quyền cập nhật trạng thái món ăn'], 403);
+        }
+        $orderItem = OrderItem::find($id);
+        if (!$orderItem) {
+            return response()->json(['message' => 'Món ăn không tồn tại'], 404);
+        }
+
+        $order = Order::find($orderItem->order_id);
+        if (!$order || !in_array($order->status, ['pending', 'serve'])) {
+            return response()->json(['message' => 'Không thể xóa món ăn từ đơn hàng đã hoàn thành hoặc hủy'], 400);
+        }
+
+        // Trừ tiền từ tổng tiền của order
+
+
+        $orderItem->delete();
+  $amount = $orderItem->quantity * $orderItem->price;
+        $order->total_price = max(0, $order->total_price - $amount);
+        $order->save();
+        // Trả về thông báo thành công
+
+        return response()->json(['message' => 'Đã xóa món ăn khỏi đơn hàng'], 200);
     }
 
 
@@ -140,21 +175,6 @@ class OrderItemController extends Controller
         ]);
     }
 
-    public function removeItem(Request $request, $id)
-    {
-        $orderItem = OrderItem::find($id);
-        if (!$orderItem) {
-            return response()->json(['message' => 'Món ăn không tồn tại'], 404);
-        }
-
-        $order = Order::find($orderItem->order_id);
-        if (!$order || !in_array($order->status, ['pending', 'serve'])) {
-            return response()->json(['message' => 'Không thể xóa món ăn từ đơn hàng đã hoàn thành hoặc hủy'], 400);
-        }
-
-        $orderItem->delete();
-        return response()->json(['message' => 'Đã xóa món ăn khỏi đơn hàng'], 200);
-    }
 
 
     public function bestSellers(Request $request)

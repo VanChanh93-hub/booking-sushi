@@ -8,7 +8,7 @@ class Category extends Model
 {
     protected $table = 'categories';
     protected $primaryKey = 'id';
-    protected $fillable = ['name', 'description', 'status'];
+    protected $fillable = ['name', 'description', 'status', 'name_en'];
 
     public function foods()
     {

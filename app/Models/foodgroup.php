@@ -11,6 +11,7 @@ class FoodGroup extends Model
        'category_id',
        'status',
        'name',
+        'name_en',
     ];
 
     public function food()

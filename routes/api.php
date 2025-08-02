@@ -39,12 +39,11 @@ Route::get('/orders', [OrderController::class, 'index']);              // Lấy 
 Route::get('/orders/{id}', [OrderController::class, 'show']);          // Lấy chi tiết đơn
 // Route::put('/order/update-status/{id}', [OrderController::class, 'updateStatus']); // Cập nhật trạng thái
 Route::delete('/order/delete/{id}', [OrderController::class, 'destroy']);    // Xoá đơn đặt
-Route::put('/orderitems/update-status/{id}', [OrderItemController::class, 'updateStatus']);
 Route::post('/orders/bookTables', [OrderController::class, 'bookTables']);
 Route::get('/statsDashbroad', [OrderController::class, 'statsDashbroad']);
 Route::get('/orders/history/{id}', [OrderController::class, 'orderHistory']);
 Route::post('/orders/cancel/{id}', [OrderController::class, 'cancelOrder']);
- Route::put('/orderitems/update-status/{id}', [OrderItemController::class, 'updateStatus']);
+
 
 
 
@@ -103,15 +102,19 @@ Route::get('admin/customers', [CustomerController::class, 'listAll']);
 Route::put('customers/{id}/status', [CustomerController::class, 'lockUnlock']);
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink']);
 Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
-
+Route::get('/getOrderChef', [OrderItemController::class, 'GetOrderItemsForChef']);
+Route::get('/getOrderStaff', [OrderItemController::class, 'GetOrderItemsForStaff']);
+Route::put('/orderitems/update-status/{id}', [OrderItemController::class, 'updateStatus']);
+Route::put('/orderTable/update/{order_table_id}', [OrderTableController::class, 'staffUpdateOrderTable']);
+Route::post('/orderTable/add', [OrderTableController::class, 'staffAddTable_id']);
+Route::post('/orderItem/add', [OrderItemController::class, 'addItem']);
+Route::delete('/orderItem/remove/{id}', [OrderItemController::class, 'removeItem']);
 });
 
 // google auth
 
 Route::get('auth/google/redirect', [GoogleController::class, 'redirect']);
 Route::get('auth/google/callback', [GoogleController::class, 'callback']);
-
-
 
 
 // voucher
@@ -127,12 +130,9 @@ Route::post('/applyVoucher', [CustomerVoucherController::class, 'applyVoucher'])
 Route::post('/themVoucherWheel', [CustomerVoucherController::class, 'store']);
 Route::get('/getAllVoucherByUser/{id}', [CustomerVoucherController::class, 'index']);
 Route::post('/table/info/{token}', [OrderTableController::class, 'getTableInfo']); // kiểm tra bàn
-Route::post('/orderItem/add', [OrderItemController::class, 'addItem']);
 
 // order table
 Route::get('/orderTable/{id}', [OrderTableController::class, 'show']);
-Route::put('/orderTable/update/{order_table_id}', [OrderTableController::class, 'staffUpdateOrderTable']);
-Route::post('/orderTable/add', [OrderTableController::class, 'staffAddTable_id']);
 
 
 
@@ -141,8 +141,7 @@ Route::post('/orders/vnpay-url', [VNPayController::class, 'createurlvnpay']);
 Route::get('/vnpay-return', [VNPayController::class, 'vnpayReturn'])->name('vnpay.callback');
 
 Route::get('/getItemsByOrderId/{id}', [OrderItemController::class, 'getItemsByOrderId']);
-Route::get('/getOrderChef', [OrderItemController::class, 'GetOrderItemsForChef']);
-Route::get('/getOrderStaff', [OrderItemController::class, 'GetOrderItemsForStaff']);
+
 
 //aiupdateItem
 
