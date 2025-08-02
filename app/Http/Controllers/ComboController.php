@@ -2,92 +2,52 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Combo;
-use App\Models\ComboItem;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ComboController extends Controller
 {
+
     public function index(Request $request)
-{
-    $lang = $request->get('lang', 'vi');
+    {
+        $lang = $request->get('lang', 'vi');
+        $combos = Combo::with('comboItems.food')->where('status', 1)->get();
 
-    $combos = Combo::with(['comboItems.food'])->get()->map(function ($combo) use ($lang) {
-        return [
-            'id' => $combo->id,
-            'name' => $lang === 'en' ? $combo->name_en : $combo->name,
-            'description' => $lang === 'en' ? $combo->description_en : $combo->description,
-            'image' => $combo->image ? asset('storage/' . $combo->image) : null,
-            'price' => $combo->price,
-            'status' => $combo->status,
-            'combo_items' => $combo->comboItems->map(function ($item) use ($lang) {
+        $localizedCombos = $combos->map(function ($combo) use ($lang) {
+            $comboItems = $combo->comboItems->map(function ($item) use ($lang) {
                 $food = $item->food;
-                if (!$food) return null; // skip nếu food không tồn tại
-
                 return [
                     'id' => $item->id,
                     'quantity' => $item->quantity,
                     'food' => [
                         'id' => $food->id,
                         'name' => $lang === 'en' ? ($food->name_en ?? $food->name) : $food->name,
-                        'jpName' => $food->jp_name,
-                        'image' => $food->image ? asset('storage/' . $food->image) : null,
+                        'name_en' => $food->name_en ?? '',
+                        'jpName' => $food->jpName,
                         'description' => $lang === 'en' ? ($food->description_en ?? $food->description) : $food->description,
-                        'price' => $food->price,
+                        'description_en' => $food->description_en ?? '',
+                        'price' => (float) $food->price, // Luôn trả về giá gốc VND
+                        'image' => $food->image ? asset('storage/' . $food->image) : null,
                     ],
                 ];
-            })->filter(),
-        ];
-    });
-
-    return response()->json($combos);
-}
-
-   public function show(Request $request, string $id)
-{
-    $lang = $request->get('lang', 'vi');
-    $combo = Combo::with(['comboItems.food'])->findOrFail($id);
-
-    $result = [
-        'id' => $combo->id,
-        'name' => $lang === 'en' ? $combo->name_en : $combo->name,
-        'description' => $lang === 'en' ? $combo->description_en : $combo->description,
-        'image' => $combo->image ? asset('storage/' . $combo->image) : null,
-        'price' => $combo->price,
-        'status' => $combo->status,
-        'combo_items' => $combo->comboItems->map(function ($item) use ($lang) {
-            $food = $item->food;
-            if (!$food) return null;
+            });
 
             return [
-                'id' => $item->id,
-                'quantity' => $item->quantity,
-                'food' => [
-                    'id' => $food->id,
-                    'name' => $lang === 'en' ? ($food->name_en ?? $food->name) : $food->name,
-                    'jpName' => $food->jp_name,
-                    'image' => $food->image ? asset('storage/' . $food->image) : null,
-                    'description' => $lang === 'en' ? ($food->description_en ?? $food->description) : $food->description,
-                    'price' => $food->price,
-                ],
-                ];
-        })->filter(),
-    ];
+                'id' => $combo->id,
+                'name' => $lang === 'en' ? ($combo->name_en ?? $combo->name) : $combo->name,
+                'name_en' => $combo->name_en ?? '',
+                'description' => $lang === 'en' ? ($combo->description_en ?? $combo->description) : $combo->description,
+                'description_en' => $combo->description_en ?? '',
+                'price' => (float) $combo->price, // Luôn trả về giá gốc VND
+                'image' => $combo->image ? asset('storage/' . $combo->image) : null,
+                'status' => $combo->status,
+                'combo_items' => $comboItems,
+            ];
+        });
 
-    return response()->json($result);
-}
-
-    public function updateStatus(Request $request, string $id)
-    {
-        $combo = Combo::findOrFail($id);
-        $validated = $request->validate([
-            'status' => 'required|boolean',
-        ]);
-        $combo->status = $validated['status'];
-        $combo->save();
-        return response()->json(['message' => 'Combo status updated successfully', 'combo' => $combo]);
+        return response()->json(['data' => $localizedCombos]);
     }
 
     public function store(Request $request)
@@ -95,152 +55,127 @@ class ComboController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'name_en' => 'nullable|string|max:255',
-            'image' => 'nullable|file|image|max:2048',
             'description' => 'nullable|string',
             'description_en' => 'nullable|string',
-            'price' => 'required|numeric',
-            'status' => 'boolean',
-            'items' => 'required|array',
-            'items.*.food_id' => 'required|exists:foods,id',
-            'items.*.quantity' => 'required|integer|min:1',
+            'price' => 'required|numeric|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'food_items' => 'required|array',
+            'food_items.*.food_id' => 'required|exists:foods,id',
+            'food_items.*.quantity' => 'required|integer|min:1',
         ]);
 
-        $imagePath = null;
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('combos', 'public');
+$validated['image'] = $request->file('image')->store('combos', 'public');
         }
 
-        $combo = Combo::create([
-            'name' => $validated['name'],
-            'name_en' => $validated['name_en'] ?? $validated['name'],
-            'image' => $imagePath,
-            'description' => $validated['description'] ?? null,
-            'description_en' => $validated['description_en'] ?? $validated['description'],
-            'price' => $validated['price'],
-            'status' => $validated['status'] ?? true,
-        ]);
+        $combo = Combo::create($validated);
 
-        foreach ($validated['items'] as $item) {
-            ComboItem::create([
-                'combo_id' => $combo->id,
+        foreach ($validated['food_items'] as $item) {
+            $combo->comboItems()->create([
                 'food_id' => $item['food_id'],
                 'quantity' => $item['quantity'],
             ]);
         }
 
-        return response()->json(['message' => 'Combo created successfully', 'combo' => $combo], 201);
+        return response()->json(['message' => 'Combo created successfully.', 'data' => $combo->load('comboItems.food')], 201);
     }
 
-    public function createComboemp(Request $request)
+    public function show(Request $request, $id)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'name_en' => 'nullable|string|max:255',
-            'image' => 'nullable|file|image|max:2048',
-            'description' => 'nullable|string',
-            'description_en' => 'nullable|string',
-            'price' => 'required|numeric',
-        ]);
+        $lang = $request->get('lang', 'vi');
+        $combo = Combo::with('comboItems.food')->find($id);
 
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('combos', 'public');
+        if (!$combo) {
+            return response()->json(['message' => 'Combo not found.'], 404);
         }
 
-        $combo = Combo::create([
-            'name' => $validated['name'],
-            'name_en' => $validated['name_en'] ?? $validated['name'],
-            'image' => $imagePath,
-            'description' => $validated['description'] ?? null,
-            'description_en' => $validated['description_en'] ?? $validated['description'],
-            'price' => $validated['price'],
-            'status' => true,
-        ]);
+        $comboItems = $combo->comboItems->map(function ($item) use ($lang) {
+            $food = $item->food;
+            return [
+                'id' => $item->id,
+                'quantity' => $item->quantity,
+                'food' => [
+                    'id' => $food->id,
+                    'name' => $lang === 'en' ? ($food->name_en ?? $food->name) : $food->name,
+                    'name_en' => $food->name_en ?? '',
+                    'jpName' => $food->jpName,
+                    'description' => $lang === 'en' ? ($food->description_en ?? $food->description) : $food->description,
+                    'description_en' => $food->description_en ?? '',
+                    'price' => (float) $food->price, // Luôn trả về giá gốc VND
+                    'image' => $food->image ? asset('storage/' . $food->image) : null,
+                ],
+            ];
+        });
 
-        return response()->json($combo, 201);
+        return response()->json([
+            'id' => $combo->id,
+            'name' => $lang === 'en' ? ($combo->name_en ?? $combo->name) : $combo->name,
+            'name_en' => $combo->name_en ?? '',
+            'description' => $lang === 'en' ? ($combo->description_en ?? $combo->description) : $combo->description,
+            'description_en' => $combo->description_en ?? '',
+            'price' => (float) $combo->price, // Luôn trả về giá gốc VND
+            'image' => $combo->image ? asset('storage/' . $combo->image) : null,
+            'status' => $combo->status,
+            'combo_items' => $comboItems,
+        ]);
     }
 
-    public function addFoodCombo(Request $request, $combo_id)
+    public function update(Request $request, $id)
     {
-        $request->validate([
-            'food_id' => 'required|exists:foods,id',
-            'quantity' => 'required|integer|min:1',
-        ]);
+        $combo = Combo::find($id);
+        if (!$combo) {
+            return response()->json(['message' => 'Combo not found.'], 404);
+        }
 
-        Combo::findOrFail($combo_id);
-
-        DB::table('combo_items')->insert([
-            'combo_id' => $combo_id,
-            'food_id' => $request->food_id,
-            'quantity' => $request->quantity,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        return response()->json(['message' => 'Thêm món ăn vào combo thành công']);
-    }
-
-    public function destroyFoodId(Request $request, $combo_id, $food_id)
-    {
-        Combo::findOrFail($combo_id);
-        DB::table('combo_items')
-            ->where('combo_id', $combo_id)
-            ->where('food_id', $food_id)
-            ->delete();
-
-        return response()->json(['message' => 'Món ăn đã được xoá khỏi combo'], 200);
-    }
-
-    public function update(Request $request, string $id)
-    {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'sometimes|string|max:255',
             'name_en' => 'nullable|string|max:255',
-            'image' => 'nullable|file|image|max:2048',
             'description' => 'nullable|string',
             'description_en' => 'nullable|string',
-            'price' => 'required|numeric',
-            'status' => 'boolean',
-            'items' => 'required|array',
-            'items.*.food_id' => 'required|exists:foods,id',
-            'items.*.quantity' => 'required|integer|min:1',
+            'price' => 'sometimes|numeric|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'status' => 'sometimes|boolean',
+            'food_items' => 'sometimes|array',
+            'food_items.*.food_id' => 'required|exists:foods,id',
+            'food_items.*.quantity' => 'required|integer|min:1',
         ]);
 
-        $combo = Combo::findOrFail($id);
-        $imagePath = $combo->image;
-
         if ($request->hasFile('image')) {
-            if ($combo->image && Storage::disk('public')->exists($combo->image)) {
+            if ($combo->image) {
                 Storage::disk('public')->delete($combo->image);
             }
-            $imagePath = $request->file('image')->store('combos', 'public');
+            $validated['image'] = $request->file('image')->store('combos', 'public');
         }
 
-        $combo->update([
-            'name' => $validated['name'],
-            'name_en' => $validated['name_en'] ?? $validated['name'],
-            'image' => $imagePath,
-            'description' => $validated['description'] ?? null,
-            'description_en' => $validated['description_en'] ?? $validated['description'],
-            'price' => $validated['price'],
-            'status' => $validated['status'] ?? true,
-        ]);
+        $combo->update($validated);
 
-        ComboItem::where('combo_id', $combo->id)->delete();
-
-        foreach ($validated['items'] as $item) {
-            ComboItem::create([
-                'combo_id' => $combo->id,
-                'food_id' => $item['food_id'],
-                'quantity' => $item['quantity'],
-            ]);
+        if (isset($validated['food_items'])) {
+            $combo->comboItems()->delete(); // Xóa các mục cũ
+            foreach ($validated['food_items'] as $item) {
+                $combo->comboItems()->create([
+                    'food_id' => $item['food_id'],
+                    'quantity' => $item['quantity'],
+                ]);
+            }
         }
 
-        return response()->json(['message' => 'Combo updated successfully', 'combo' => $combo]);
+        return response()->json(['message' => 'Combo updated successfully.', 'data' => $combo->load('comboItems.food')]);
     }
 
-    public function destroy(string $id)
+    public function updateStatus(Request $request, $id)
     {
-        // Optional: implement if needed
+        $combo = Combo::find($id);
+        if (!$combo) {
+            return response()->json(['message' => 'Combo not found.'], 404);
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|boolean',
+        ]);
+
+        $combo->status = $validated['status'];
+        $combo->save();
+
+        return response()->json(['message' => 'Combo status updated successfully.', 'data' => $combo->load('comboItems.food')]);
     }
 }
